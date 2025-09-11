@@ -1,0 +1,156 @@
+{% extends "layout.html" %}
+{% block title %}El Portal Rúnico{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos del contenedor principal */
+    #portal-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 40px;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    /* Estilos para la tablilla de pistas */
+    #clues-tablet {
+        background-color: #3a3a3a;
+        color: #e0e0e0;
+        padding: 20px;
+        border-radius: 8px;
+        border: 4px solid #555;
+        width: 300px;
+        font-family: 'Georgia', serif;
+    }
+    #clues-tablet h4 {
+        margin-top: 0;
+        text-align: center;
+        color: #fff;
+        border-bottom: 2px solid #555;
+        padding-bottom: 10px;
+    }
+    #clues-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    #clues-list li {
+        margin-bottom: 10px;
+        font-style: italic;
+    }
+
+    /* Estilos para el área del portal y el inventario */
+    #portal-area {
+        text-align: center;
+    }
+
+    /* Marco del portal */
+    #portal-frame {
+        display: grid;
+        grid-template-columns: 80px 80px 80px 80px;
+        grid-template-rows: 80px 80px 80px 80px 80px;
+        gap: 4px;
+        background-color: #1a1a1a;
+        padding: 10px;
+        border: 4px solid #000;
+        border-radius: 4px;
+    }
+
+    .portal-slot {
+        width: 80px;
+        height: 80px;
+        background-color: #333; /* Espacio vacío */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .frame-block {
+        background-color: #2E1A47; /* Color obsidiana */
+        border: 2px solid #000;
+        background-image: url('https://www.transparenttextures.com/patterns/rocky-wall.png');
+    }
+    
+    .obsidian-block {
+        width: 70px;
+        height: 70px;
+        background-color: #2E1A47;
+        border: 2px solid #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2.5rem;
+        color: #E0B0FF;
+        cursor: grab;
+        user-select: none;
+    }
+    .obsidian-block:active {
+        cursor: grabbing;
+    }
+
+    #block-inventory {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        min-height: 100px;
+    }
+
+    #flint-and-steel {
+        margin-top: 20px;
+        width: 80px;
+        height: 80px;
+        background-color: #444;
+        border: 2px solid gold;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+</style>
+
+<div class="text-center">
+    <h2>Juego 2: El Enigma del Portal Rúnico</h2>
+    <p class="lead">La única salida parece ser a través de este portal, pero sus runas están desordenadas. Usa las pistas de la tablilla para reconstruirlo.</p>
+
+    <div id="portal-container">
+        <!-- Tablilla de Pistas -->
+        <div id="clues-tablet">
+            <h4>Pistas Ancestrales</h4>
+            <ul id="clues-list">
+                <!-- Las pistas se generan con JS -->
+            </ul>
+        </div>
+
+        <!-- Área del Portal -->
+        <div id="portal-area">
+            <div id="portal-frame">
+                <!-- El marco del portal se genera con JS -->
+            </div>
+            <div id="block-inventory">
+                <!-- Los bloques de obsidiana se generan con JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botón para validar -->
+    <button id="check-portal-btn" class="btn btn-primary btn-lg mt-4">Comprobar Portal</button>
+
+    <!-- Feedback -->
+    <p id="feedback" class="mt-2">&nbsp;</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    // Inicia el juego pasando las variables de Flask
+    initPortalEnigmaGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

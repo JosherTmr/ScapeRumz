@@ -1,0 +1,136 @@
+{% extends "layout.html" %}
+{% block title %}El Mapa del Laberinto{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --tile-size: 22px; 
+        --cols: 38;
+        --rows: 22;
+        --bg: #0f1720;
+        --panel: #15202b;
+        --accent: #7c3aed;
+    }
+    .game-wrap { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+    #map-wrap { background-color: #0b1112; padding: 12px; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+    #map { display: grid; grid-template-columns: repeat(var(--cols), var(--tile-size)); grid-template-rows: repeat(var(--rows), var(--tile-size)); }
+    
+    .tile { 
+        width: var(--tile-size); 
+        height: var(--tile-size); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        user-select: none;
+        /* Necesario para la capa de "niebla de guerra" */
+        position: relative; 
+        /* Propiedades comunes de las texturas */
+        background-size: cover;
+        background-position: center;
+    }
+
+    /* --- NUEVO: Mecanismo de "Niebla de Guerra" --- */
+    /* Esta es la capa oscura que cubrirá las casillas */
+    .tile::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0b1112;
+        opacity: 1; /* Por defecto, la niebla es opaca */
+        transition: opacity 0.5s ease-in-out; /* Efecto de revelado suave */
+        pointer-events: none; /* Permite hacer clic a través de la capa */
+    }
+    /* Cuando una casilla NO está oculta, la niebla se vuelve transparente */
+    .tile:not(.hidden)::after {
+        opacity: 0;
+    }
+    /* Se elimina la regla de opacidad anterior para .hidden */
+
+
+    /* --- NUEVO: Texturas de Casillas --- */
+    .floor { background-image: url('https://p.novaskin.me/1008533095.png'); }
+    .wall { background-image: url('https://p.novaskin.me/3973303204.png'); }
+    
+    /* Nota: Usamos url_for para las imágenes locales en la carpeta 'static' */
+    .door { background-image: url("{{ url_for('static', filename='img/door.gif') }}"); }
+    .door.open { filter: brightness(1.5); } /* La puerta abierta se ve más brillante */
+
+    .goal { background-image: url("{{ url_for('static', filename='img/goal.jpg') }}"); border-radius: 50%; }
+    
+    /* La trampa por defecto se ve como suelo */
+    .trap { background-image: url('https://p.novaskin.me/1008533095.png'); }
+    .trap.revealed { background-image: url("{{ url_for('static', filename='img/lava.gif') }}"); }
+
+    .clue { background-image: url('https://p.novaskin.me/4889073312.png'); }
+    .clue.triggered { filter: saturate(2.5); } /* La pista activada se ve más intensa */
+
+    .player { 
+        width: 80%; 
+        height: 80%; 
+        background-image: url("{{ url_for('static', filename='img/player.jpg') }}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    
+    /* --- Estilos del Panel de UI (sin cambios) --- */
+    #ui { width: 340px; background: var(--panel); padding: 16px; border-radius: 10px; }
+    #ui h2 { margin: 0 0 8px 0; font-size: 18px; }
+    .info { font-size: 13px; color: #cfe8ff; margin-bottom: 12px; }
+    .controls { display: flex; gap: 8px; margin-bottom: 10px; }
+    .btn { background: #1f2933; border: 1px solid rgba(255, 255, 255, 0.03); padding: 8px 10px; border-radius: 6px; cursor: pointer; color: white; }
+    .btn.primary { background: var(--accent); }
+    #log { height: 200px; overflow: auto; background: rgba(0, 0, 0, 0.25); padding: 8px; border-radius: 6px; font-size: 13px; display: flex; flex-direction: column-reverse; }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    label { font-size: 13px; flex-shrink: 0; }
+    input[type="text"] { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.05); background: #0e1416; color: #e6eef8; }
+    .help-text { font-size: 12px; color: #a9c7ff; margin-bottom: 1rem; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+    .shake-animation { animation: shake 0.5s ease-in-out; }
+</style>
+
+<div class="text-center">
+    <h2>Juego 3: El Mapa del Laberinto</h2>
+    <p class="help-text">Encuentra las pistas para descifrar los códigos y hallar la salida.</p>
+</div>
+
+<div class="game-wrap">
+    <div id="map-wrap">
+        <div id="map" aria-label="Mapa del laberinto"></div>
+    </div>
+
+    <aside id="ui">
+        <h2>Panel de Juego</h2>
+        <div class="info">Posición: <span id="pos">-</span>&nbsp;|&nbsp;Vidas: <span id="lives">3</span></div>
+        <div class="controls">
+            <button class="btn" id="btn-up">▲</button>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="btn" id="btn-left">◀</button>
+                <button class="btn" id="btn-right">▶</button>
+            </div>
+            <button class="btn" id="btn-down">▼</button>
+        </div>
+
+        <div class="row">
+            <label for="code-input">Código:</label>
+            <input id="code-input" type="text" placeholder="Escribe un código..." />
+            <button class="btn primary" id="try-code">Probar</button>
+        </div>
+
+        <div style="margin-top:16px; margin-bottom:8px">
+            <strong>Registro de Eventos</strong>
+        </div>
+        <div id="log"></div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    initMapAdventureGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

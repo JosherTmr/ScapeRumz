@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}Selección de Sala{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1>Bienvenido al Escape Room Virtual</h1>
+    <p class="lead">Elige tu desafío. Cada sala pondrá a prueba tus habilidades de una manera diferente.</p>
+</div>
+
+<div class="row mt-5">
+    {% for room_key, room_data in rooms.items() %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ room_data.title }}</h5>
+                <p class="card-text">
+                    {% if room_key == 'laboratorio' %}
+                        Una serie de acertijos de lógica e ingenio. ¿Podrás descifrar los secretos del doctor?
+                    {% elif room_key == 'calamar' %}
+                        Una secuencia de minijuegos mortales. Solo los más hábiles y afortunados sobrevivirán.
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('start_room', room_name=room_key) }}" class="btn btn-primary">Empezar a Jugar</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

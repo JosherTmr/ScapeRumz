@@ -1,0 +1,145 @@
+
+
+{% extends "layout.html" %}
+{% block title %}Juego de Memoria Minero{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --card-size: 100px;
+        --bg: #0f1720;
+        --panel: #15202b;
+        --accent: #7c3aed;
+        --grass-block: url('https://p.novaskin.me/3973303204.png');
+    }
+    .game-wrap { 
+        display: flex; 
+        gap: 24px; 
+        align-items: flex-start; 
+        justify-content: center; 
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    
+    /* --- CRITICAL: Game Board Layout --- */
+    /* Este es el contenedor principal que crea la cuadrícula 5x5 */
+    #memory-game-board {
+        display: grid;
+        grid-template-columns: repeat(5, var(--card-size));
+        grid-template-rows: repeat(5, var(--card-size));
+        gap: 10px;
+        perspective: 1000px; /* Para efecto 3D */
+    }
+
+    /* --- CRITICAL: Card Sizing and Styling --- */
+    /* Cada carta debe tener un tamaño fijo para que la cuadrícula funcione */
+    .card {
+        width: var(--card-size);
+        height: var(--card-size);
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+        cursor: pointer;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .card.flip {
+        transform: rotateY(180deg);
+    }
+    .card.matched {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    /* Estilos de las caras de la carta */
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 8px;
+        background-size: cover;
+        background-position: center;
+    }
+    .card-back {
+        background-image: var(--grass-block);
+        border: 4px solid #5a3a22;
+    }
+    .card-front {
+        background-color: #a3d5ff;
+        transform: rotateY(180deg);
+        padding: 5px;
+    }
+
+    /* --- CRITICAL: Image Containment --- */
+    /* Asegura que la imagen nunca sea más grande que su contenedor */
+    .card-front img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Escala la imagen para que quepa, sin deformarla */
+        display: block; /* Soluciona problemas de espacio extra */
+    }
+    
+    /* --- UI Panel Styles (sin cambios importantes) --- */
+    #ui { 
+        width: 280px; 
+        background: var(--panel); 
+        padding: 16px; 
+        border-radius: 10px;
+        text-align: center;
+    }
+    #ui h2 { margin: 0 0 8px 0; }
+    #ui #game-status {
+        font-size: 14px; 
+        color: var(--accent); 
+        min-height: 20px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    #lives-display {
+        font-size: 32px;
+        margin-bottom: 16px;
+        letter-spacing: 8px;
+    }
+    #reset-button {
+        background: var(--accent);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        font-size: 16px;
+        width: 100%;
+    }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); } 20%, 40%, 60%, 80% { transform: translateX(8px); } }
+    .shake-animation { animation: shake 0.4s ease-in-out; }
+</style>
+
+<div class="text-center">
+    <h2>Juego 4: Memoria de Mobs</h2>
+    <p class="help-text">Encuentra los 12 pares de mobs. ¡Cuidado con el Creeper!</p>
+</div>
+
+<div class="game-wrap">
+    <div id="memory-game-board">
+        <!-- Las cartas se generan aquí con JavaScript -->
+    </div>
+
+    <aside id="ui">
+        <h2>Panel de Juego</h2>
+        <p id="game-status"></p>
+        <strong>Vidas Restantes:</strong>
+        <div id="lives-display">❤️❤️❤️</div>
+        <p style="font-size: 13px; color: #cfe8ff;">Encuentra todos los pares antes de quedarte sin vidas.</p>
+        <button id="reset-button">Reiniciar Partida</button>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    // Asegúrate de que esta función exista en tu archivo minecraft.js
+    initMemoryGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

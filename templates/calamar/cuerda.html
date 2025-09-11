@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Tira y Afloja{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Juego 3: Tira y Afloja</h2>
+    <p>Responde las preguntas lo más rápido que puedas para tirar de la cuerda. ¡Un error le dará ventaja al oponente!</p>
+
+    <!-- Representación visual del Tira y Afloja -->
+    <div class="my-4 mx-auto" style="width: 80%; max-width: 700px; background-color: #5a3e36; border-radius: 10px; padding: 10px; border: 2px solid #3d2a23;">
+        <div style="position: relative; height: 40px; background: linear-gradient(to right, #dc3545, #ffc107, #28a745);">
+            <!-- El 'pañuelo' o marcador central de la cuerda -->
+            <div id="rope-marker" style="position: absolute; left: 50%; top: -10px; width: 5px; height: 60px; background-color: white; transform: translateX(-50%); transition: left 0.3s ease-in-out;"></div>
+        </div>
+        <div class="d-flex justify-content-between text-white mt-2">
+            <span>Oponente</span>
+            <span>Tu Equipo</span>
+        </div>
+    </div>
+
+    <!-- Contenedor para la pregunta y las opciones -->
+    <div id="qa-container" class="card bg-dark text-white border-light p-4 my-4 mx-auto" style="max-width: 600px;">
+        <h4 id="question-title" class="card-title">Cargando...</h4>
+        <div id="options-buttons" class="d-grid gap-2">
+            <!-- Los botones de respuesta se generarán aquí -->
+        </div>
+    </div>
+    
+    <p id="game-result" class="lead fs-3"></p>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calamar.js') }}"></script>
+<script>
+    initCuerdaGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block title %}Juego del Ahorcado{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos del Ahorcado para Tema Oscuro (sin cambios respecto a la versión anterior) */
+    .container { max-width: 850px; width: 100%; display: flex; gap: 30px; align-items: center; justify-content: center; padding: 30px 20px; background: var(--panel, #15202b); border-radius: 10px; color: #e0e0e0; }
+    .hangman-box { max-width: 270px; }
+    .hangman-box img { max-width: 100%; filter: invert(1) brightness(0.9); }
+    .game-box { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    
+    /* --- NUEVO: Estilo para el contador de progreso --- */
+    .stage-text {
+        font-size: 1.3rem;
+        color: var(--accent, #7c3aed);
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+
+    .game-box .word-display { display: flex; gap: 10px; list-style: none; align-items: center; justify-content: center; padding: 0; margin-bottom: 25px; }
+    .word-display .letter { width: 28px; font-size: 2rem; font-weight: 600; text-align: center; text-transform: uppercase; border-bottom: 3px solid #ccc; line-height: 1.2; }
+    .word-display .letter.guessed { border-color: transparent; }
+    .game-box .hint-text { font-size: 1.1rem; margin-bottom: 15px; }
+    .game-box .hint-text b { font-weight: 600; color: #a9c7ff; }
+    .game-box .guesses-text { font-size: 1.2rem; margin-bottom: 20px; }
+    .game-box .guesses-text b { font-weight: 600; color: #ff5c5c; }
+    .game-box .keyboard { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; width: 100%; }
+    .keyboard button { color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; outline: none; border: none; background: #1f2933; padding: 8px; border-radius: 4px; text-transform: uppercase; width: calc(100% / 9 - 6px); }
+    .keyboard button:disabled { opacity: 0.4; pointer-events: none; }
+    .keyboard button:hover:enabled { background: var(--accent, #7c3aed); }
+    .game-modal { position: fixed; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s ease; }
+    .game-modal.show { opacity: 1; pointer-events: auto; }
+    .game-modal .content { background: var(--panel, #15202b); color: #e0e0e0; max-width: 420px; width: 100%; text-align: center; border-radius: 10px; padding: 30px; }
+    .game-modal .content h4 { font-size: 1.5rem; }
+    .game-modal .content p { font-size: 1.15rem; margin: 15px 0 20px; }
+    .game-modal .content p b { color: var(--accent, #7c3aed); font-weight: 600; }
+</style>
+
+<div class="container">
+    <div class="hangman-box">
+        <img src="https://www-codingnepalweb-com.translate.goog/demos/build-hangman-game-html-javascript/images/hangman-0.svg" alt="hangman-img">
+    </div>
+    <div class="game-box">
+        <!-- --- NUEVO: Elemento para mostrar el progreso --- -->
+        <h3 class="stage-text"></h3>
+        <ul class="word-display"></ul>
+        <h4 class="hint-text">Pista: <b></b></h4>
+        <h4 class="guesses-text">Intentos incorrectos: <b></b></h4>
+        <div class="keyboard"></div>
+    </div>
+</div>
+
+<div class="game-modal">
+    <div class="content">
+        <img src="#" alt="gif">
+        <h4></h4>
+        <p></p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    initHangmanGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Panal de Azúcar{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Juego 2: Panal de Azúcar</h2>
+    
+    <!-- Fase 1: El Quiz de Conocimiento -->
+    <div id="quiz-container">
+        <p>Para descubrir la secuencia correcta, responde 5 preguntas. Un solo error y el panal se romperá.</p>
+        <div class="card bg-dark text-white border-light my-4 mx-auto" style="max-width: 600px;">
+            <div class="card-header" id="question-counter">Pregunta 1 de 5</div>
+            <div class="card-body">
+                <h5 class="card-title" id="question-text">Cargando pregunta...</h5>
+                <div id="options-container" class="list-group">
+                    <!-- Las opciones se generarán con JavaScript -->
+                </div>
+            </div>
+        </div>
+        <p id="quiz-feedback" class="lead">&nbsp;</p>
+    </div>
+
+    <!-- Fase 2: El Trazado del Panal (inicialmente oculto) -->
+    <div id="canvas-container" style="display: none;">
+        <p>¡Excelente! Ahora traza la forma siguiendo la secuencia que descubriste: <strong id="sequence-display" class="text-warning"></strong></p>
+        <canvas id="panal-canvas" width="400" height="400" class="mx-auto d-block" style="background-color: #fca311; border: 2px solid white; border-radius: 15px; cursor: pointer;"></canvas>
+        <p id="feedback" class="mt-2">&nbsp;</p>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calamar.js') }}"></script>
+<script>
+    initPanalGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

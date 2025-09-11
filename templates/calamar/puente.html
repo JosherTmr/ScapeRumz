@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Puente de Cristal{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Juego 5: Puente de Cristal</h2>
+    <p>Un paso en falso y caerás. Elige el panel correcto en cada fila para cruzar al otro lado. Buena suerte.</p>
+    <div id="bridge-container" class="container mt-4">
+        <!-- El puente se generará aquí con JavaScript -->
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calamar.js') }}"></script>
+<script>
+    initPuenteGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

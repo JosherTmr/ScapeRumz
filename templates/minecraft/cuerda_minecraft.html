@@ -1,0 +1,143 @@
+
+
+{% extends "layout.html" %}
+{% block title %}Tira y Afloja Minero{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos base del panel y tema oscuro */
+    :root {
+        --panel: #15202b;
+        --accent: #7c3aed;
+    }
+
+    /* Contenedor principal del visualizador del juego */
+    #tug-of-war-visual {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 80%;
+        max-width: 800px;
+        margin: 2rem auto;
+        background-color: #3d2a23; /* Color tierra oscura */
+        border-radius: 10px;
+        padding: 10px;
+        border: 4px solid #5a3e36; /* Borde de madera */
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+    
+    /* Personajes a los lados */
+    .character {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+    }
+
+    /* El 'carril' donde se mueve el golem */
+    #rope-track {
+        flex-grow: 1;
+        height: 50px;
+        background-image: url('https://p.novaskin.me/1008533095.png'); /* Textura de tierra */
+        background-repeat: repeat-x;
+        background-size: contain;
+        position: relative; /* Clave para posicionar el golem */
+        border-left: 5px solid #6b7280;
+        border-right: 5px solid #6b7280;
+    }
+
+    /* El golem que actúa como marcador */
+    #rope-marker {
+        position: absolute;
+        left: 50%; /* Posición inicial en el centro */
+        top: 50%;
+        width: 50px; /* Ancho del golem */
+        height: 60px; /* Alto del golem */
+        
+        /* Centrado perfecto vertical y horizontal */
+        transform: translate(-50%, -50%);
+        
+        /* Transición suave para el movimiento */
+        transition: left 0.3s ease-in-out;
+        
+        /* Imagen del golem */
+        background-image: url('/static/img/player.jpg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    
+    /* Contenedor de preguntas y respuestas con estética Minecraft */
+    #qa-container {
+        max-width: 600px;
+        margin: 1rem auto;
+        background: var(--panel);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+    #qa-container h4 {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Estilo de los botones de respuesta */
+    .btn-option {
+        background: #1f2933;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        text-align: center;
+        width: 100%;
+        font-size: 1rem;
+        transition: background-color 0.2s;
+    }
+    .btn-option:hover {
+        background: var(--accent);
+    }
+    
+    /* Contenedor para los botones */
+    #options-buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    @media (min-width: 576px) {
+        #options-buttons {
+            grid-template-columns: 1fr 1fr; /* 2 columnas en pantallas más grandes */
+        }
+    }
+</style>
+
+<div class="text-center">
+    <h2>Juego 5: Tira y Afloja Minero</h2>
+    <p class="help-text">Responde correctamente para que el Creeper no explote a Steve!</p>
+
+    <!-- Representación visual del Tira y Afloja de Minecraft -->
+    <div id="tug-of-war-visual">
+        <img src="/static/img/steve.png" alt="Steve" class="character">
+        <div id="rope-track">
+            <div id="rope-marker"></div>
+        </div>
+        <img src="/static/img/zombie.jpg"" alt="Zombie" class="character">
+    </div>
+
+    <!-- Contenedor para la pregunta y las opciones -->
+    <div id="qa-container">
+        <h4 id="question-title">Cargando pregunta...</h4>
+        <div id="options-buttons">
+            <!-- Los botones de respuesta se generarán aquí con JavaScript -->
+        </div>
+    </div>
+    
+    <p id="game-result" class="lead fs-3 mt-4"></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    // Asegúrate de que esta función exista en tu archivo minecraft.js
+    initTugOfWarGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

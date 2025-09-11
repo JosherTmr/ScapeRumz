@@ -1,0 +1,121 @@
+--- START OF FILE templates/AI/mapa_ia_estatico.html ---
+
+{% extends "layout.html" %}
+{% block title %}Búnker IA{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --tile-size: 22px; 
+        --cols: 38;
+        --rows: 22;
+        --panel: #15202b;
+        --accent: #0891b2;
+    }
+    .game-wrap { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+    #map-wrap { background-color: #000; padding: 12px; border-radius: 10px; border: 1px solid var(--accent); box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+    #map { display: grid; grid-template-columns: repeat(var(--cols), var(--tile-size)); grid-template-rows: repeat(var(--rows), var(--tile-size)); }
+    
+    .tile { 
+        width: var(--tile-size); 
+        height: var(--tile-size); 
+        position: relative; 
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tile-texture {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-size: cover;
+    }
+    .tile::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; opacity: 1; transition: opacity 0.5s ease-in-out; pointer-events: none; z-index: 2; }
+    .tile:not(.hidden)::after { opacity: 0; }
+
+    /* --- TEXTURAS TEMÁTICAS (VERSIÓN CORREGIDA Y FINAL) --- */
+    .floor { background-image: url("{{ url_for('static', filename='img/ai_floor.png') }}"); }
+    .wall { background-image: url("{{ url_for('static', filename='img/ai_wall.png') }}"); }
+    .door { background-image: url("{{ url_for('static', filename='img/ai_door.png') }}"); }
+    .door.open { filter: brightness(1.5); }
+    .goal { background-image: url("{{ url_for('static', filename='img/goal.jpg') }}"); filter: hue-rotate(180deg) brightness(1.2); }
+    .clue { background-image: url("{{ url_for('static', filename='img/ai_clue.png') }}"); }
+
+    /* --- LÓGICA DE TRAMPAS CORREGIDA Y SIMPLIFICADA --- */
+    /* 1. Por defecto, una trampa se ve como un suelo normal. */
+    .trap {
+        background-image: url("{{ url_for('static', filename='img/ai_floor.png') }}");
+    }
+    /* 2. Cuando se revela, esta regla (que es más específica) anula la anterior. */
+    .trap.revealed {
+        background-image: url("{{ url_for('static', filename='img/ai_poison.png') }}");
+    }
+    
+    .player {
+        background-image: url("{{ url_for('static', filename='img/ai_caballero.gif') }}");
+        background-size: contain; background-repeat: no-repeat; background-position: center;
+        width: 80%; height: 80%;
+        z-index: 1;
+    }
+    
+    /* --- Estilos del Panel y Modal (Sin cambios) --- */
+    #ui { width: 340px; background: var(--panel); padding: 16px; border-radius: 10px; }
+    #ui h2 { margin: 0 0 8px 0; font-size: 18px; }
+    .info { font-size: 13px; color: #cfe8ff; margin-bottom: 12px; }
+    .controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+    .btn { background: #1f2933; border: 1px solid rgba(255, 255, 255, 0.03); padding: 8px 10px; border-radius: 6px; cursor: pointer; color: white; }
+    #log { height: 150px; overflow: auto; background: rgba(0, 0, 0, 0.25); padding: 8px; border-radius: 6px; font-size: 13px; display: flex; flex-direction: column-reverse; margin-top: 8px; }
+    #keys-ui { margin-top: 16px; }
+    #keys-list { font-size: 13px; min-height: 20px; display:flex; flex-direction:column; gap: 4px; }
+    .key-item { background: #0e1416; padding: 6px 8px; border-radius: 4px; }
+    #captcha-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    #captcha-modal { background: var(--panel); padding: 2rem; border-radius: 10px; border: 1px solid var(--accent); text-align: center; max-width: 500px; }
+    #captcha-prompt { font-size: 1.3rem; margin-bottom: 1.5rem; }
+    #captcha-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .captcha-image { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 3px solid transparent; }
+    .captcha-image.selected { border-color: var(--accent); }
+    #captcha-submit { background: var(--accent); border: none; padding: 0.8rem 2rem; font-size: 1rem; color: white; border-radius: 8px; cursor: pointer; }
+</style>
+
+<div class="text-center">
+    <h2>Juego 4: Laberinto del Búnker</h2>
+    <p class="help-text">Estás en una instalación abandonada. Hackea los terminales para desbloquear las puertas del búnker de seguridad.</p>
+</div>
+
+<div class="game-wrap">
+    <div id="map-wrap">
+        <div id="map"></div>
+    </div>
+    <aside id="ui">
+        <h2>Panel de Superviviente</h2>
+        <div class="info">Posición: <span id="pos">-</span>&nbsp;|&nbsp;Vidas: <span id="lives">3</span></div>
+        <div class="controls">
+            <button class="btn" id="btn-up">▲</button>
+            <div><button class="btn" id="btn-left">◀</button><button class="btn" id="btn-right">▶</button></div>
+            <button class="btn" id="btn-down">▼</button>
+        </div>
+        <div id="keys-ui">
+            <strong>Llaves de Acceso Obtenidas</strong>
+            <div id="keys-list"></div>
+        </div>
+        <strong>Registro de Eventos</strong>
+        <div id="log"></div>
+    </aside>
+</div>
+
+<div id="captcha-modal-overlay">
+    <div id="captcha-modal">
+        <h3 id="captcha-prompt"></h3>
+        <div id="captcha-grid"></div>
+        <button id="captcha-submit">Verificar Humanidad</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+<script>
+    initStaticApocalypseMap('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

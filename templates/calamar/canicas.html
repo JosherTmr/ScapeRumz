@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block title %}Las Canicas{% endblock %}
+{% block head %}
+{{ super() }}
+<style>
+    /* Estilos para el área de juego y las canicas */
+    #game-area {
+        background-color: #343a40; /* Un fondo oscuro para que resalten las canicas */
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        transition: background-color 0.3s;
+        flex-wrap: wrap; /* Para que las canicas se organicen en filas */
+        padding: 20px;
+        gap: 15px; /* Espacio entre canicas */
+    }
+    .marble {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #fca311;
+        box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.3), 2px 2px 5px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.5); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Juego 4: Las Canicas</h2>
+    <p>Adivina si la máquina tiene un número par o impar de canicas en su mano. Tienes 3 intentos para ganar.</p>
+    
+    <!-- Área de juego visual -->
+    <div id="game-area" class="my-4 p-4 mx-auto" style="max-width: 500px;">
+        <div id="machine-hand" class="display-1">✊</div> <!-- Estado inicial: puño cerrado -->
+    </div>
+
+    <div class="my-4">
+        <button id="par-btn" class="btn btn-primary btn-lg mx-2 px-5">Par</button>
+        <button id="impar-btn" class="btn btn-info btn-lg mx-2 px-5">Impar</button>
+    </div>
+    <p class="lead">Intentos restantes: <span id="attempts" class="fw-bold">3</span></p>
+    <p id="result-text" class="lead fw-bold">&nbsp;</p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calamar.js') }}"></script>
+<script>
+    initCanicasGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

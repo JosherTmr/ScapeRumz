@@ -1,0 +1,125 @@
+--- START OF FILE templates/AI/captcha.html ---
+
+{% extends "layout.html" %}
+{% block title %}Verificación Humana{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --panel: #15202b;
+        --accent: #0891b2;
+        --correct: #22c55e;
+        --incorrect: #ef4444;
+        --selected-border: #38bdf8;
+    }
+
+    #captcha-container {
+        max-width: 800px;
+        margin: 1rem auto;
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    
+    #progress-bar {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 1rem;
+    }
+    .progress-dot {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background-color: #1f2933;
+        border: 2px solid var(--accent);
+        transition: background-color 0.3s ease;
+    }
+    .progress-dot.completed {
+        background-color: var(--accent);
+    }
+    
+    #prompt {
+        font-size: 1.5rem;
+        color: #e6eef8;
+        margin-bottom: 1.5rem;
+        min-height: 50px; /* Evita saltos de layout */
+    }
+
+    #image-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+    .grid-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .grid-image:hover {
+        transform: scale(1.05);
+    }
+    .grid-image.selected {
+        border-color: var(--selected-border);
+        box-shadow: 0 0 15px var(--selected-border);
+    }
+    
+    #submit-btn {
+        background: var(--accent);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        width: 100%;
+    }
+    #submit-btn:disabled {
+        background-color: #334155;
+        cursor: not-allowed;
+    }
+
+    #feedback-message {
+        min-height: 30px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-top: 1rem;
+    }
+
+</style>
+
+<div class="text-center">
+    <h2>Juego 2: Protocolo de Verificación Humana</h2>
+    <p class="help-text">El sistema de seguridad cree que eres un bot. Supera 3 pruebas de verificación para demostrar tu humanidad.</p>
+</div>
+
+<div id="captcha-container">
+    <div id="progress-bar">
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+        <div class="progress-dot"></div>
+    </div>
+    <h3 id="prompt" class="text-center">Cargando protocolo...</h3>
+    <div id="image-grid">
+        <!-- Las imágenes se cargarán aquí -->
+    </div>
+    <p id="feedback-message" class="text-center"></p>
+    <button id="submit-btn">Verificar</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+<script>
+    initCaptchaGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

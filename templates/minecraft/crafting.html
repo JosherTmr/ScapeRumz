@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block title %}Enigma de Crafteo{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos para el contenedor principal del juego */
+    #crafting-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 50px;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    /* Estilos para la mesa de crafteo y el inventario */
+    .crafting-section {
+        background-color: #1a1a1a;
+        padding: 20px;
+        border-radius: 12px;
+        border: 2px solid #444;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .crafting-section h4 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #e0e0e0;
+        text-align: center;
+        font-family: 'Minecraftia', sans-serif; /* Fuente tipo Minecraft si la tuvieras */
+    }
+
+    /* Grid de crafteo */
+    #crafting-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 70px);
+        grid-template-rows: repeat(3, 70px);
+        gap: 5px;
+        background-color: #333;
+        padding: 5px;
+        border: 2px solid #555;
+        border-radius: 8px;
+    }
+
+    .grid-slot {
+        width: 70px;
+        height: 70px;
+        background-color: #505050;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .grid-slot .item {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Inventario */
+    #inventory {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 8px;
+        min-height: 80px; /* Asegura que el inventario tenga altura aunque esté vacío */
+    }
+
+    /* Estilos para los items (tanto en inventario como en grid) */
+    .item {
+        width: 64px;
+        height: 64px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 4px;
+        border: 2px solid #222;
+    }
+
+    #inventory .item {
+        cursor: grab;
+    }
+
+    #inventory .item:active {
+        cursor: grabbing;
+    }
+
+    /* Botón y feedback */
+    #craft-button {
+        display: block;
+        margin: 20px auto 10px;
+        width: 80%;
+        padding: 12px;
+        font-size: 1.2rem;
+    }
+
+    #feedback {
+        min-height: 24px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="text-center">
+    <h2>Juego 1: El Enigma de la Mesa de Crafteo</h2>
+    <p class="lead">Una extraña energía emana de esta mesa. Resuelve el acertijo para desvelar su poder.</p>
+
+    <!-- Acertijo -->
+    <p id="riddle-text" class="my-4">Cargando acertijo...</p>
+
+    <!-- Contenedor del Juego -->
+    <div id="crafting-container">
+        <!-- Sección de la Mesa de Crafteo -->
+        <div class="crafting-section">
+            <h4>Mesa de Crafteo</h4>
+            <div id="crafting-grid">
+                <!-- Los slots se generan con JS -->
+            </div>
+        </div>
+        <!-- Sección del Inventario -->
+        <div class="crafting-section">
+            <h4>Inventario</h4>
+            <div id="inventory">
+                <!-- Los ítems se generan con JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para craftear -->
+    <button id="craft-button" class="btn btn-primary btn-lg">Craftear</button>
+
+    <!-- Mensajes de feedback -->
+    <p id="feedback" class="mt-2">&nbsp;</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/minecraft.js') }}"></script>
+<script>
+    // Inicia el juego pasando las variables de Flask
+    initCraftingEnigmaGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

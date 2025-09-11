@@ -1,0 +1,132 @@
+
+
+{% extends "layout.html" %}
+{% block title %}Real o IA?{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --panel: #15202b;
+        --accent: #0891b2; /* Un color cian que va bien con la temática IA */
+        --correct: #22c55e;
+        --incorrect: #ef4444;
+    }
+
+    /* Contenedor principal del juego */
+    #game-container {
+        max-width: 700px;
+        margin: 1rem auto;
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    /* Contenedor de la imagen con una relación de aspecto fija */
+    #image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 66.66%; /* Relación de aspecto 3:2 */
+        background-color: #0e1416;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    #game-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Asegura que la imagen se vea completa */
+    }
+
+    /* Panel de UI con vidas y puntuación */
+    #ui-panel {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        color: #e6eef8;
+    }
+    #lives-display {
+        font-size: 2rem;
+        letter-spacing: 4px;
+    }
+
+    /* Botones de elección */
+    #choice-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .choice-btn {
+        background: #1f2933;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+    .choice-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    #btn-real:hover { background-color: var(--correct); }
+    #btn-ia:hover { background-color: var(--accent); }
+
+    /* Overlay de feedback (Correcto/Incorrecto) */
+    #feedback-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none; /* Oculto por defecto */
+        justify-content: center;
+        align-items: center;
+        font-size: 3rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="text-center">
+    <h2>Juego 1: ¿Imagen Real o creada por IA?</h2>
+    <p class="help-text">Observa la imagen y decide si es auténtica o fue generada por una inteligencia artificial. Tienes 3 vidas.</p>
+</div>
+
+<div id="game-container">
+    <div id="image-wrapper">
+        <img id="game-image" src="" alt="¿Real o IA?">
+        <!-- El overlay para feedback se mostrará aquí -->
+        <div id="feedback-overlay"></div>
+    </div>
+
+    <div id="ui-panel">
+        <div id="lives-display">❤️❤️❤️</div>
+        <div id="score-display">Correctas: 0 / 10</div>
+    </div>
+
+    <div id="choice-buttons">
+        <button id="btn-real" class="choice-btn">✔️ Real</button>
+        <button id="btn-ia" class="choice-btn">🤖 IA</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- IMPORTANTE: Cambia la ruta al nuevo archivo JS -->
+<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+<script>
+    // Inicializa el nuevo juego
+    initRealOrAIGame('{{ room_name }}', '{{ stage_name }}');
+</script>
+{% endblock %}

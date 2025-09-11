@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}¡Victoria!{% endblock %}
+
+{% block content %}
+<div id="victory-container" class="text-center">
+    <h1>¡Felicidades!</h1>
+    <h2 class="text-success">Has escapado de "{{ room_title }}"</h2>
+    <p class="lead mt-4">Tu tiempo total fue:</p>
+    <h3>{{ time_taken }}</h3>
+    
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Jugar de Nuevo</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if room_name == 'calamar' %}
+<script>
+    // Animación de billetes cayendo
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('victory-container');
+        for (let i = 0; i < 50; i++) {
+            const bill = document.createElement('div');
+            bill.innerHTML = '💵';
+            bill.style.position = 'absolute';
+            bill.style.fontSize = `${Math.random() * 20 + 20}px`;
+            bill.style.left = `${Math.random() * 100}vw`;
+            bill.style.top = `${-50 - Math.random() * 100}px`;
+            bill.style.animation = `fall ${Math.random() * 4 + 3}s linear ${Math.random() * 5}s infinite`;
+            container.appendChild(bill);
+        }
+    });
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes fall {
+            to {
+                transform: translateY(120vh) rotate(360deg);
+            }
+        }
+        #victory-container {
+            position: relative;
+            overflow: hidden;
+            height: 80vh;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endif %}
+{% endblock %}
