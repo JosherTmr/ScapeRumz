@@ -121,10 +121,10 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- IMPORTANTE: Cambia la ruta al nuevo archivo JS -->
-<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai_real_or_ai.js') }}"></script>
 <script>
     // Inicializa el nuevo juego
-    initRealOrAIGame('{{ room_name }}', '{{ stage_name }}');
+    initRealOrAIGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>
 {% endblock %}

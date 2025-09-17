@@ -137,13 +137,22 @@ def play_stage(room_name, stage_name):
         stage_data = room['data'][stage_name]
         return render_template('puzzle.html', room_name=room_name, stage_name=stage_name, data=stage_data)
     else:
-        # --- CORRECCIÓN APLICADA AQUÍ ---
-        # Construye la ruta incluyendo la subcarpeta (el nombre de la sala).
         template_path = f'{room_name}/{stage_name}.html'
-        return render_template(template_path, room_name=room_name, stage_name=stage_name)
+        # --- MEJORA DE SEGURIDAD: Token de un solo uso para la victoria ---
+        win_token = os.urandom(16).hex()
+        session['win_token'] = win_token
+        return render_template(template_path, room_name=room_name, stage_name=stage_name, win_token=win_token)
 
 @app.route('/win/<room_name>/<stage_name>', methods=['POST'])
 def win_stage(room_name, stage_name):
+    # --- MEJORA DE SEGURIDAD: Validar el token de victoria ---
+    submitted_token = request.form.get('token')
+    session_token = session.pop('win_token', None) # Usar pop para que sea de un solo uso
+
+    if not submitted_token or not session_token or submitted_token != session_token:
+        flash("Intento de victoria inválido o la sesión ha expirado. Inténtalo de nuevo.", "danger")
+        return redirect(url_for('start_room', room_name=room_name))
+
     return advance_to_next_stage(room_name, stage_name)
 
 def advance_to_next_stage(room_name, stage_name):
