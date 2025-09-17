@@ -60,13 +60,6 @@ escape_rooms = {
         'stages': ['mapa_ia_estatico','real_or_ia','captcha','chatbot',],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
-    },
-    # --- NUEVA SALA D1 ---
-    'd1': {
-        'title': 'Escapando del D1',
-        'stages': ['mapa_d1'],
-        'template_type': 'unique',
-        'data': {} # La lógica estará en el frontend
     }
 
 }
