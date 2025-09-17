@@ -410,7 +410,9 @@ def start_minecraft_map_game():
         'triggered_traps': set()
     }
     session.modified = True
-    return jsonify({k: v for k, v in session['minecraft_map_game'].items() if k != 'riddles'})
+    # Convert set to list for JSON serialization
+    game_state = {k: v if not isinstance(v, set) else list(v) for k, v in session['minecraft_map_game'].items()}
+    return jsonify({k: v for k, v in game_state.items() if k != 'riddles'})
 
 @app.route('/api/minecraft/map/move', methods=['POST'])
 def move_minecraft_player():
