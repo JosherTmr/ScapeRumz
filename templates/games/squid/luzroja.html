@@ -26,9 +26,10 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/calamar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/squid/calamar.js') }}"></script>
 <script>
     // Asegúrate de llamar a la función correcta para este juego
-    initLuzRojaGame('{{ room_name }}', '{{ stage_name }}');
+    initLuzRojaGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@
     <p class="lead">Has superado todos los juegos. La fortuna te espera.</p>
     <p>Solo queda un paso.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
         <button type="submit" class="btn btn-primary btn-lg mt-3">Reclamar el Premio</button>
     </form>
 </div>

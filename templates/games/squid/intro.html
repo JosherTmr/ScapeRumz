@@ -6,6 +6,7 @@
     <p class="lead">Las reglas son simples. Supera seis juegos. Si ganas, te llevas el premio. Si pierdes...</p>
     <p>El primer juego está a punto de comenzar. Prepárate.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
         <button type="submit" class="btn btn-primary btn-lg mt-3">Estoy listo</button>
     </form>
 </div>

@@ -44,7 +44,7 @@ escape_rooms = {
             }
         }
     },
-    'calamar': {
+    'squid': {
         'title': 'El Juego del Calamar',
         'stages': ['intro','luzroja', 'panal', 'cuerda', 'canicas', 'puente', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
@@ -137,7 +137,9 @@ def play_stage(room_name, stage_name):
         stage_data = room['data'][stage_name]
         return render_template('puzzle.html', room_name=room_name, stage_name=stage_name, data=stage_data)
     else:
-        template_path = f'{room_name}/{stage_name}.html'
+        # --- REFACTORIZACIÓN DE RUTA ---
+        # La ruta ahora apunta a la subcarpeta 'games'
+        template_path = f'games/{room_name}/{stage_name}.html'
         # --- MEJORA DE SEGURIDAD: Token de un solo uso para la victoria ---
         win_token = os.urandom(16).hex()
         session['win_token'] = win_token
@@ -187,6 +189,309 @@ def victory(room_name):
     
     return render_template('victory.html', room_name=room_name, room_title=room_title, time_taken=time_taken)
 
+import random
+
+# --- LÓGICA DE JUEGO MOVIDA AL BACKEND ---
+
+# --- Juego 4 (AI): Laberinto del Búnker ---
+BUNKER_MAP_DATA = {
+    'map': [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,0,0,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,0,1,4,0,0,1,1,1,1,5,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,0,1,1,1,0,1,1,1,1,0,0,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,0,0,0,0,0,1,1,4,1,1,1,0,0,0,1,4,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,4,0,1,0,0,2,0,0,0,0,0,0,1,0,0,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,4,0,1,1,0,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,4,4,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,4,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,4,0,0,4,4,1,1,],
+        [1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,4,1,1,],
+        [1,1,1,4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,5,0,4,1,1,],
+        [1,1,1,0,0,4,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,4,0,0,4,4,1,1,],
+        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,4,4,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,4,0,0,1,0,0,0,4,1,1,1,0,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,4,5,0,2,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,3,0,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,4,0,0,1,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,4,0,0,2,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,]
+    ],
+    'puzzle_bank': [
+        { 'type': 'belongs-or-no', 'prompt': "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo", 'images': ['/captcha_ai/gomitas1.jpg','/captcha_ai/gomitas2.jpg','/captcha_ai/gomitas3.jpg','/captcha_ai/gomitas4.jpg','/captcha_ai/gomitas5.jpg','/captcha_ai/gomitas6.jpg','/captcha_ai/gomitas7.jpg','/captcha_ai/gomitas8.jpg','/captcha_ai/gomitas9.jpg'], 'correctIndices': [8] },
+        { 'type': 'belongs-or-no2', 'prompt': "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo.", 'images': ['/captcha_ai/limas.jpg','/captcha_ai/lime.jpg','/captcha_ai/limones.jpg','/captcha_ai/mandarinas.jpg','/captcha_ai/manodebuda.jpg','/captcha_ai/maracuya.jpg','/captcha_ai/naranjas.jpg','/captcha_ai/papaya.jpg','/captcha_ai/pomelos.jpg'], 'correctIndices': [5,7] },
+        { 'type': 'belongs-or-no3', 'prompt': "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo.", 'images': ['/captcha_ai/cupcake5.jpg','/captcha_ai/cupcake4.jpg','/captcha_ai/cupcake2.jpg','/captcha_ai/cupcake9.jpg','/captcha_ai/cupcake8.jpg','/captcha_ai/cupcake7.jpg','/captcha_ai/cupcake1.jpg','/captcha_ai/cupcake6.jpg','/captcha_ai/cupcake3.jpg'], 'correctIndices': [3,4] },
+        { 'type': 'belongs-or-no4', 'prompt': "Sistema: Elige solo los numeros primos", 'images': ['/captcha_ai/numeros2.jpg','/captcha_ai/numeros9.jpg','/captcha_ai/numeros7.png','/captcha_ai/numeros5.jpg','/captcha_ai/numeros1.jpg','/captcha_ai/numeros8.png','/captcha_ai/numeros6.jpg','/captcha_ai/numeros4.jpg','/captcha_ai/numeros3.jpg'], 'correctIndices': [0,4,7,8] }
+    ],
+    'puzzles': {
+        "5,1": { "doorKey": "6,6", "name": "Alpha" },
+        "33,11": { "doorKey": "12,4", "name": "Beta" },
+        "10,3": { "doorKey": "7,16", "name": "Gamma" },
+        "5,16": { "doorKey": "24,19", "name": "Exit" }
+    }
+}
+
+@app.route('/api/ai/map/start', methods=['POST'])
+def start_bunker_game():
+    # Setup Puzzles
+    puzzles = {}
+    puzzle_bank = random.sample(BUNKER_MAP_DATA['puzzle_bank'], len(BUNKER_MAP_DATA['puzzles']))
+    for (key, puzzle_def), puzzle_data in zip(BUNKER_MAP_DATA['puzzles'].items(), puzzle_bank):
+        puzzles[key] = {**puzzle_def, 'puzzle': puzzle_data, 'solved': False}
+
+    # Setup Doors
+    doors = {p['doorKey']: {'open': False} for p in puzzles.values()}
+
+    session['bunker_game'] = {
+        'map': BUNKER_MAP_DATA['map'],
+        'player': { 'x': 1, 'y': 2, 'lives': 4 },
+        'puzzles': puzzles,
+        'doors': doors,
+        'traps': {}, # Traps are stateless, damage is dealt on move
+        'unlocked_keys': []
+    }
+    session.modified = True
+    return jsonify(session['bunker_game'])
+
+@app.route('/api/ai/map/move', methods=['POST'])
+def move_bunker_player():
+    game = session.get('bunker_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    dx = request.json.get('dx', 0)
+    dy = request.json.get('dy', 0)
+
+    player = game['player']
+    nx, ny = player['x'] + dx, player['y'] + dy
+
+    # Basic validation
+    if not (0 <= nx < 38 and 0 <= ny < 22):
+        return jsonify({'error': 'Move out of bounds'}), 400
+
+    tile_type = game['map'][ny][nx]
+    log_message = ""
+    game_over = False
+    win = False
+
+    if tile_type == 1: # Wall
+        return jsonify(game) # No change
+
+    key = f"{nx},{ny}"
+    if tile_type == 2 and not game['doors'].get(key, {}).get('open', False):
+        log_message = f"ALERTA: Puerta {key} sellada."
+        game['log_message'] = log_message
+        return jsonify(game)
+
+    # Valid move, update position
+    player['x'], player['y'] = nx, ny
+
+    if tile_type == 3: # Goal
+        log_message = "¡Has alcanzado el búnker de seguridad!"
+        game_over = True
+        win = True
+    elif tile_type == 4: # Trap
+        if key not in game['traps']:
+            game['traps'][key] = True # Mark trap as triggered
+            player['lives'] -= 1
+            log_message = "¡Peligro! Has pisado una trampa activa. Vidas -1."
+            if player['lives'] <= 0:
+                game_over = True
+                win = False
+    elif tile_type == 5: # Clue
+        puzzle = game['puzzles'].get(key)
+        if puzzle and not puzzle.get('solved'):
+            log_message = f"Terminal {puzzle['name']} detectado. Esperando hackeo."
+            # The client will now open the modal. The puzzle data is already on the client.
+
+    game['log_message'] = log_message
+    game['game_over'] = game_over
+    game['win'] = win
+    session['bunker_game'] = game
+    session.modified = True
+    return jsonify(game)
+
+@app.route('/api/ai/map/solve_puzzle', methods=['POST'])
+def solve_bunker_puzzle():
+    game = session.get('bunker_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    puzzle_key = request.json.get('puzzle_key')
+    selected_indices = request.json.get('selected_indices')
+
+    puzzle_info = game['puzzles'].get(puzzle_key)
+    if not puzzle_info: return jsonify({'error': 'Invalid puzzle key'}), 400
+
+    correct_indices = puzzle_info['puzzle']['correctIndices']
+    is_correct = (len(correct_indices) == len(selected_indices) and
+                  all(i in selected_indices for i in correct_indices))
+
+    if is_correct:
+        puzzle_info['solved'] = True
+        door_key = puzzle_info['doorKey']
+        if door_key in game['doors']:
+            game['doors'][door_key]['open'] = True
+        game['unlocked_keys'].append(puzzle_info['name'])
+        log_message = f"Verificación humana exitosa. Llave de acceso \"{puzzle_info['name']}\" obtenida."
+    else:
+        game['player']['lives'] -= 1
+        log_message = "Verificación fallida. La IA ha reforzado sus defensas."
+        if game['player']['lives'] <= 0:
+            game['game_over'] = True
+            game['win'] = False
+
+    game['log_message'] = log_message
+    session['bunker_game'] = game
+    session.modified = True
+    return jsonify(game)
+
+
+# --- Juego 1 (Squid): Luz Roja, Luz Verde ---
+LUZ_ROJA_CONFIG = {
+    'duration': 30,
+    'progress_needed': 100,
+    'progress_per_run': 4
+}
+
+@app.route('/api/squid/luzroja/start', methods=['POST'])
+def start_luz_roja():
+    session['luzroja_game'] = {
+        'progress': 0,
+        'start_time': time.time(),
+        'light_state': 'green',
+        'next_change': time.time() + (random.random() * 2 + 1.5) # Initial green light duration
+    }
+    session.modified = True
+    return jsonify({
+        'timeLeft': LUZ_ROJA_CONFIG['duration'],
+        'lightState': 'green',
+        'progress': 0
+    })
+
+@app.route('/api/squid/luzroja/run', methods=['POST'])
+def run_luz_roja():
+    game = session.get('luzroja_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    time_now = time.time()
+    if time_now > game['start_time'] + LUZ_ROJA_CONFIG['duration']:
+        return jsonify({'game_over': True, 'win': False, 'message': '¡Se acabó el tiempo!'})
+
+    # Update light state before checking the run
+    if time_now > game['next_change']:
+        if game['light_state'] == 'green':
+            game['light_state'] = 'yellow'
+            game['next_change'] = time_now + 0.75
+        elif game['light_state'] == 'yellow':
+            game['light_state'] = 'red'
+            game['next_change'] = time_now + (random.random() * 2 + 1)
+        elif game['light_state'] == 'red':
+            game['light_state'] = 'green'
+            game['next_change'] = time_now + (random.random() * 2 + 1.5)
+
+    # Check the run against the current light state
+    if game['light_state'] != 'green':
+        return jsonify({'game_over': True, 'win': False, 'message': '¡Te moviste con la luz incorrecta!'})
+
+    game['progress'] += LUZ_ROJA_CONFIG['progress_per_run']
+
+    win = game['progress'] >= LUZ_ROJA_CONFIG['progress_needed']
+    game_over = win
+
+    session['luzroja_game'] = game
+    session.modified = True
+
+    return jsonify({
+        'new_progress': game['progress'],
+        'game_over': game_over,
+        'win': win,
+        'light_state': game['light_state'] # Also return current light state
+    })
+
+# --- Juego 1 (AI): ¿Real o IA? ---
+REAL_OR_AI_IMAGE_BANK = [
+    {'file': 'CANDLE.png', 'type': 'ia'}, {'file': 'CAR.png', 'type': 'ia'},
+    {'file': 'STREET_ART.png', 'type': 'ia'}, {'file': 'MUSEUM.png', 'type': 'ia'},
+    {'file': 'MUSEUM_ROBOT.png', 'type': 'ia'}, {'file': 'FISH.png', 'type': 'ia'},
+    {'file': 'PARROT.png', 'type': 'ia'}, {'file': 'HORSE.png', 'type': 'ia'},
+    {'file': 'DOG.png', 'type': 'ia'}, {'file': 'CAT.png', 'type': 'ia'},
+    {'file': 'BEACH.png', 'type': 'ia'}, {'file': 'TEMPLE.png', 'type': 'ia'},
+    {'file': 'CITY.png', 'type': 'ia'}, {'file': 'LAKE.png', 'type': 'ia'},
+    {'file': 'STREET.png', 'type': 'ia'}, {'file': 'BOOKS.png', 'type': 'ia'},
+    {'file': 'SHOES.png', 'type': 'ia'}, {'file': 'CAKE.png', 'type': 'ia'},
+    {'file': 'COFEE.png', 'type': 'ia'}, {'file': 'FOOD.png', 'type': 'ia'},
+    {'file': 'GUY.png', 'type': 'ia'}, {'file': 'KID.png', 'type': 'ia'},
+    {'file': 'BEACH_COUPLE.png', 'type': 'ia'}, {'file': 'OLD_MAN.png', 'type': 'ia'},
+    {'file': 'WOMAN.png', 'type': 'ia'}, {'file': 'ART_SHOW.jpg', 'type': 'real'},
+    {'file': 'BOOOKS.jpg', 'type': 'real'}, {'file': 'ESTAMADREQUENOSECOMOSELLAMA.jpg', 'type': 'real'},
+    {'file': 'HAPPY_MAN.jpg', 'type': 'real'}, {'file': 'KIDS.jpg', 'type': 'real'},
+    {'file': 'OWL.jpg', 'type': 'real'}, {'file': 'CAR_ADVENTURE.jpg', 'type': 'real'},
+    {'file': 'COOKIES.jpg', 'type': 'real'}, {'file': 'FOOOD.jpg', 'type': 'real'},
+    {'file': 'FOOOOD.jpg', 'type': 'real'}, {'file': 'ART.jpg', 'type': 'real'},
+    {'file': 'BIRD.jpg', 'type': 'real'}, {'file': 'KISINGCOUPLE.jpg', 'type': 'real'},
+    {'file': 'PAINTING_MAN.jpg', 'type': 'real'}, {'file': 'SHOEES.jpg', 'type': 'real'},
+    {'file': 'CAMERAMAN.jpg', 'type': 'real'}, {'file': 'GIRL.jpg', 'type': 'real'},
+    {'file': 'PELICANO.jpg', 'type': 'real'}, {'file': 'ZORRO.jpg', 'type': 'real'},
+    {'file': 'CALLE.jpg', 'type': 'real'}, {'file': 'VELAS.jpg', 'type': 'real'},
+    {'file': 'TEMPLO.jpg', 'type': 'real'}, {'file': 'BEACHMAN.jpg', 'type': 'real'},
+    {'file': 'WOW.jpg', 'type': 'real'}, {'file': 'BOAT.jpg', 'type': 'real'}
+]
+
+@app.route('/api/ai/real_or_ai/start', methods=['POST'])
+def start_real_or_ai_game():
+    image_set = random.sample(REAL_OR_AI_IMAGE_BANK, 10)
+    session['real_or_ai_game'] = {
+        'images': image_set,
+        'score': 0,
+        'lives': 3,
+        'current_index': 0,
+        'images_to_win': 10
+    }
+    session.modified = True
+
+    first_image = session['real_or_ai_game']['images'][0]['file']
+    return jsonify({'image_file': first_image})
+
+@app.route('/api/ai/real_or_ai/guess', methods=['POST'])
+def real_or_ai_guess():
+    game = session.get('real_or_ai_game')
+    if not game:
+        return jsonify({'error': 'Game not started'}), 400
+
+    guess = request.json.get('guess')
+    current_index = game['current_index']
+
+    correct_answer = game['images'][current_index]['type']
+    is_correct = (guess == correct_answer)
+
+    if is_correct:
+        game['score'] += 1
+    else:
+        game['lives'] -= 1
+
+    game['current_index'] += 1
+
+    game_over = game['lives'] <= 0 or game['score'] >= game['images_to_win'] or game['current_index'] >= len(game['images'])
+    win = game['score'] >= game['images_to_win'] and game['lives'] > 0
+
+    response = {
+        'correct': is_correct,
+        'new_score': game['score'],
+        'new_lives': game['lives'],
+        'game_over': game_over,
+        'win': win
+    }
+
+    if not game_over:
+        response['next_image_file'] = game['images'][game['current_index']]['file']
+
+    session['real_or_ai_game'] = game
+    session.modified = True
+
+    return jsonify(response)
+
+
 #--- CONFIGURACIÓN DE LA API DE GEMINI ---
 # ¡MUY IMPORTANTE! Guarda tu clave de API como una variable de entorno
 # En tu terminal, ejecuta: export GEMINI_API_KEY="TU_API_KEY"
@@ -233,7 +538,9 @@ Eres "Warden", una inteligencia artificial cuyo propósito es comprender lo que 
 # Endpoint para la ruta del juego
 @app.route('/game/ai/chatbot')
 def ai_chatbot():
-    return render_template('AI/chatbot.html', room_name='ai', stage_name='chatbot')
+    # This route is now deprecated and will be handled by play_stage.
+    # It can be removed, but we'll redirect for now to be safe.
+    return redirect(url_for('play_stage', room_name='ai', stage_name='chatbot'))
 
 # Endpoint de la API para conectar con Gemini
 @app.route('/api/gemini_chat', methods=['POST'])
