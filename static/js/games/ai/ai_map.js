@@ -45,36 +45,42 @@ async function initStaticApocalypseMap(roomName, stageName, winToken) {
             if (!response.ok) throw new Error('Failed to start game');
             gameState = await response.json();
             log('Sistema: Sobreviviente detectado. Accede al búnker de seguridad.');
-
-            // --- CORRECCIÓN DE BUG ---
-            // Poblar el objeto visualTraps para que el ciclo de animación funcione.
-            visualTraps = {}; // Limpiar por si acaso
-            gameState.map.forEach((row, y) => {
-                row.forEach((tileType, x) => {
-                    if (tileType === 4) {
-                        visualTraps[coordKey(x, y)] = false; // Inicializar todas las trampas como inactivas visualmente
-                    }
-                });
-            });
-
             render();
-            startTrapCycle();
+            startTrapCycle(gameState.start_time); // Pasar la hora del servidor
         } catch (error) {
             console.error("Error starting game:", error);
             log("Error fatal al iniciar la partida.");
         }
     }
 
-    const TRAP_INTERVAL = 2000;
+    const TRAP_INTERVAL = 4000; // El ciclo completo es de 4 segundos
     let visualTraps = {}; // For visual state only
 
-    function startTrapCycle() {
+    function startTrapCycle(serverStartTime) {
+        const clientStartTime = Date.now();
+        // Calcular la diferencia de tiempo entre el reloj del cliente y el del servidor
+        const serverTimeOffset = (serverStartTime * 1000) - clientStartTime;
+
         trapIntervalId = setInterval(() => {
-            for (const key in visualTraps) {
-                visualTraps[key] = !visualTraps[key];
+            const correctedTime = Date.now() + serverTimeOffset;
+            const timeSinceStart = correctedTime - (serverStartTime * 1000);
+
+            // Actualizar el estado visual de cada trampa individualmente
+            if (gameState.map && gameState.trap_offsets) {
+                gameState.map.forEach((row, y) => {
+                    row.forEach((tileType, x) => {
+                        if (tileType === 4) {
+                            const key = coordKey(x, y);
+                            const offset = gameState.trap_offsets[key] * 1000; // a milisegundos
+                            // Cada trampa tiene su propio ciclo basado en su desfase
+                            const isTrapActive = ((timeSinceStart + offset) % TRAP_INTERVAL) < (TRAP_INTERVAL / 2);
+                            visualTraps[key] = isTrapActive;
+                        }
+                    });
+                });
             }
             render();
-        }, TRAP_INTERVAL);
+        }, 500); // Actualizar visualmente con frecuencia para que sea fluido
     }
 
     function render() {

@@ -244,13 +244,21 @@ def start_bunker_game():
     # Setup Doors
     doors = {p['doorKey']: {'open': False} for p in puzzles.values()}
 
+    # Setup Trap Offsets
+    trap_offsets = {}
+    for y, row in enumerate(BUNKER_MAP_DATA['map']):
+        for x, tile_type in enumerate(row):
+            if tile_type == 4:
+                trap_offsets[f"{x},{y}"] = random.random() * 4
+
     session['bunker_game'] = {
         'map': BUNKER_MAP_DATA['map'],
         'player': { 'x': 1, 'y': 2, 'lives': 4 },
         'puzzles': puzzles,
         'doors': doors,
-        'traps': {}, # Traps are stateless, damage is dealt on move
-        'unlocked_keys': []
+        'unlocked_keys': [],
+        'start_time': time.time(),
+        'trap_offsets': trap_offsets # Guardar los desfases de las trampas
     }
     session.modified = True
     return jsonify(session['bunker_game'])
@@ -292,8 +300,13 @@ def move_bunker_player():
         game_over = True
         win = True
     elif tile_type == 4: # Trap
-        if key not in game['traps']:
-            game['traps'][key] = True # Mark trap as triggered
+        # Lógica de trampa basada en tiempo y desfase individual
+        offset = game.get('trap_offsets', {}).get(key, 0)
+        time_since_start = time.time() - game['start_time']
+        # Ciclo de 4 segundos: 2s activada, 2s desactivada
+        is_trap_active = ((time_since_start + offset) % 4) < 2
+
+        if is_trap_active:
             player['lives'] -= 1
             log_message = "¡Peligro! Has pisado una trampa activa. Vidas -1."
             if player['lives'] <= 0:
