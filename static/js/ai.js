@@ -493,8 +493,11 @@ function initChatbotGame(roomName, stageName) {
 
     startGame();
 }
-// EN static/js/ai.js - REEMPLAZA LA FUNCIÓN ANTIGUA CON ESTA VERSIÓN COMPLETA Y FINAL
-
+/**
+ * =============================================================
+ * Juego 4 (Sala AI): Laberinto del Búnker (Apocalipsis Estático)
+ * =============================================================
+ */
 function initStaticApocalypseMap(roomName, stageName) {
     // --- Referencias al DOM ---
     const mapEl = document.getElementById('map');
@@ -509,38 +512,42 @@ function initStaticApocalypseMap(roomName, stageName) {
 
     // --- Configuración ---
     const COLS = 38, ROWS = 22;
-    const IMAGE_PATH = '/static/img/captcha_game/';
+    const IMAGE_PATH = '/static/img';
     const PUZZLE_BANK = [
-        { type: 'semantic', prompt: "Sistema: Selecciona la imagen que representa 'caos'.", images: ['serene_lake.jpg', 'library.jpg', 'traffic_jam.jpg', 'beach_sunset.jpg', 'protest.jpg', 'storm.jpg', 'zen_garden.png', 'empty_room.png', 'sleeping_cat.png'], correctIndices: [2, 4, 5] },
-        { type: 'odd-one-out', prompt: "Sistema: Identifica el artefacto anómalo.", images: ['hammer.jpg', 'wrench.jpg', 'apple.jpg', 'saw.jpg', 'screwdriver.jpg', 'axe.jpg', 'drill.jpg', 'pliers.jpg', 'tape_measure.jpg'], correctIndex: 2 },
-        { type: 'ai-error', prompt: "Sistema: Detecta la corrupción de datos (error de IA).", images: ['hand_normal_1.jpg', 'hand_6_fingers.jpg', 'face_normal_1.jpg', 'face_normal_2.jpg', 'text_normal.jpg', 'hand_normal_2.jpg', 'face_normal_3.jpg', 'text_weird.jpg', 'cat_normal.png'], correctIndices: [1, 7] }
+        
+        { type: 'belongs-or-no', prompt: "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo", images: ['/captcha_ai/gomitas1.jpg','/captcha_ai/gomitas2.jpg','/captcha_ai/gomitas3.jpg','/captcha_ai/gomitas4.jpg','/captcha_ai/gomitas5.jpg','/captcha_ai/gomitas6.jpg','/captcha_ai/gomitas7.jpg','/captcha_ai/gomitas8.jpg','/captcha_ai/gomitas9.jpg'], correctIndices: [8] },
+        { type: 'belongs-or-no2', prompt: "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo.", images: ['/captcha_ai/limas.jpg','/captcha_ai/lime.jpg','/captcha_ai/limones.jpg','/captcha_ai/mandarinas.jpg','/captcha_ai/manodebuda.jpg','/captcha_ai/maracuya.jpg','/captcha_ai/naranjas.jpg','/captcha_ai/papaya.jpg','/captcha_ai/pomelos.jpg'], correctIndices: [5,7] },
+        { type: 'belongs-or-no3', prompt: "Sistema: Selecciona la(s) imagen(es) que no pertenece(n) al grupo.", images: ['/captcha_ai/cupcake5.jpg','/captcha_ai/cupcake4.jpg','/captcha_ai/cupcake2.jpg','/captcha_ai/cupcake9.jpg','/captcha_ai/cupcake8.jpg','/captcha_ai/cupcake7.jpg','/captcha_ai/cupcake1.jpg','/captcha_ai/cupcake6.jpg','/captcha_ai/cupcake3.jpg'], correctIndices: [3,4] },
+        { type: 'belongs-or-no4', prompt: "Sistema: Elige solo los numeros primos", images: ['/captcha_ai/numeros2.jpg','/captcha_ai/numeros9.jpg','/captcha_ai/numeros7.png','/captcha_ai/numeros5.jpg','/captcha_ai/numeros1.jpg','/captcha_ai/numeros8.png','/captcha_ai/numeros6.jpg','/captcha_ai/numeros4.jpg','/captcha_ai/numeros3.jpg'], correctIndices: [0,4,7,8] }
+
     ];
 
     // --- Estado del Juego ---
     let player, map, doors, puzzles, traps, currentCaptcha, selectedCaptchaIndices;
     const unlockedKeys = new Set();
-    const staticMap = [ [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,0,0,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,0,1,0,0,0,1,1,1,1,5,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,0,1,1,1,0,1,1,1,1,0,0,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,0,0,0,0,0,1,1,4,1,1,1,0,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,4,0,1,0,0,2,0,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,4,0,1,1,0,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,4,0,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,4,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1],
-                        [1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
-                        [1,1,1,4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,5,0,0,1,1],
-                        [1,1,1,0,0,0,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,1,1],
-                        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,0,4,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,0,0,0,1,0,0,0,4,1,1,1,0,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,0,5,0,2,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,3,0,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,0,0,0,1,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,2,0,0,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1],
-                        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]];
+    const staticMap = [ [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,0,0,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,0,1,4,0,0,1,1,1,1,5,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,0,1,1,1,0,1,1,1,1,0,0,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,0,0,0,0,0,1,1,4,1,1,1,0,0,0,1,4,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,4,0,1,0,0,2,0,0,0,0,0,0,1,0,0,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,4,0,1,1,0,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,4,4,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,4,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,4,0,0,4,4,1,1,],
+    [1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,4,1,1,],
+    [1,1,1,4,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,5,0,4,1,1,],
+    [1,1,1,0,0,4,1,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,4,0,0,4,4,1,1,],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,4,0,0,0,4,1,1,1,1,1,1,1,4,4,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,4,0,0,1,0,0,0,4,1,1,1,0,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,4,5,0,2,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,3,0,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,4,0,0,1,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,4,0,0,2,0,0,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,4,1,1,1,1,1,1,1,1,1,1,1,],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,]
+    ];
                         
     // --- FUNCIONES AUXILIARES ---
     function coordKey(x, y) { return `${x},${y}`; }
@@ -563,7 +570,17 @@ function initStaticApocalypseMap(roomName, stageName) {
         player = { x: 1, y: 2, lives: 4 };
         doors = {};
         puzzles = {};
-        traps = {}; // Inicializa el objeto de trampas
+
+        // --- MODIFICADO: Ahora `traps` guarda el estado (activo/inactivo) de cada trampa. ---
+        traps = {}; 
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (map[y][x] === 4) { // Si la celda es una trampa (tipo 4)
+                    traps[coordKey(x, y)] = { active: false }; // La añadimos al registro, inicialmente inactiva.
+                }
+            }
+        }
+
         puzzles[coordKey(5, 1)] = { puzzle: getRandomPuzzle(), doorKey: coordKey(6, 6), solved: false, name: "Alpha" };
         puzzles[coordKey(33, 11)] = { puzzle: getRandomPuzzle(), doorKey: coordKey(12, 4), solved: false, name: "Beta" };
         puzzles[coordKey(10, 3)] = { puzzle: getRandomPuzzle(), doorKey: coordKey(7, 16), solved: false, name: "Gamma" };
@@ -572,9 +589,32 @@ function initStaticApocalypseMap(roomName, stageName) {
         Object.values(puzzles).forEach(p => { doors[p.doorKey] = { open: false }; });
         log('Sistema: Sobreviviente detectado. Accede al búnker de seguridad.');
     }
+
+    // --- NUEVO: Configuración y Lógica del Temporizador de Trampas ---
+    const TRAP_INTERVAL = 2000; // Las trampas cambian de estado cada 2 segundos.
+
+    function startTrapCycle() {
+        setInterval(() => {
+            // 1. Alterna el estado (activo/inactivo) de cada trampa en nuestra variable.
+            for (const key in traps) {
+                traps[key].active = !traps[key].active;
+            }
+            // 2. Vuelve a dibujar el mapa para que los cambios sean visibles.
+            render();
+        }, TRAP_INTERVAL);
+    }
     
     function render() {
         mapEl.innerHTML = '';
+        const currentVisible = new Set();
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (isVisible(x, y)) {
+                    currentVisible.add(coordKey(x, y));
+                }
+            }
+        }
+
         for (let y = 0; y < ROWS; y++) {
             for (let x = 0; x < COLS; x++) {
                 const cell = document.createElement('div');
@@ -590,7 +630,8 @@ function initStaticApocalypseMap(roomName, stageName) {
                 else if (type === 3) texture.classList.add('goal');
                 else if (type === 4) {
                     texture.classList.add('trap');
-                    if (traps[key] && traps[key].triggered) {
+                    // --- MODIFICADO: Comprueba si la trampa está `active` para revelarla. ---
+                    if (traps[key] && traps[key].active) {
                         texture.classList.add('revealed');
                     }
                 }
@@ -602,7 +643,7 @@ function initStaticApocalypseMap(roomName, stageName) {
                     playerEl.className = 'player';
                     cell.appendChild(playerEl);
                 }
-                if (!isVisible(x, y)) {
+                if (!currentVisible.has(key)) {
                     cell.classList.add('hidden');
                 }
                 mapEl.appendChild(cell);
@@ -642,15 +683,33 @@ function initStaticApocalypseMap(roomName, stageName) {
         if (tileType === 3) {
             log('¡Has alcanzado el búnker de seguridad!');
             endGame(true);
-        } else if (tileType === 4) {
+        } 
+        // --- MODIFICADO: Lógica de daño de trampas ---
+// Dentro de la función move(dx, dy)
+
+// ...
+
+        else if (tileType === 4) {
             const trapKey = key;
-            if (!traps[trapKey] || !traps[trapKey].triggered) {
-                traps[trapKey] = { triggered: true };
+            // Comprobamos si la trampa existe en nuestro registro Y si está activa.
+            if (traps[trapKey] && traps[trapKey].active) {
                 player.lives--;
-                log('¡Peligro! Has activado una contramedida de la IA. Vidas -1.');
+                log('¡Peligro! Has pisado una trampa activa. Vidas -1.');
+
+                // --- LÍNEAS PARA LA SACUDIDA ---
+                document.body.classList.add('shake-animation');
+                setTimeout(() => document.body.classList.remove('shake-animation'), 500);
+                // ---------------------------------
+                
+                // Desactivamos la trampa al instante para evitar daño múltiple.
+                traps[trapKey].active = false; 
+
                 if (player.lives <= 0) endGame(false);
             }
-        } else if (tileType === 5) {
+        } 
+
+// ...
+        else if (tileType === 5) {
             const puzzleData = puzzles[key];
             if (puzzleData && !puzzleData.solved) {
                 currentCaptcha = puzzleData;
@@ -726,4 +785,5 @@ function initStaticApocalypseMap(roomName, stageName) {
     // --- Iniciar Juego ---
     setupLevel();
     render();
+    startTrapCycle(); // <-- Inicia el ciclo de las trampas
 }

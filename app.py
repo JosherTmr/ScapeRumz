@@ -60,6 +60,13 @@ escape_rooms = {
         'stages': ['mapa_ia_estatico','real_or_ia','captcha','chatbot',],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
+    },
+    # --- NUEVA SALA D1 ---
+    'd1': {
+        'title': 'Escapando del D1',
+        'stages': ['mapa_d1'],
+        'template_type': 'unique',
+        'data': {} # La lógica estará en el frontend
     }
 
 }
@@ -182,8 +189,7 @@ def victory(room_name):
 # ¡MUY IMPORTANTE! Guarda tu clave de API como una variable de entorno
 # En tu terminal, ejecuta: export GEMINI_API_KEY="TU_API_KEY"
 
-GEMINI_API_KEY='AIzaSyA9_HmnOb-8kWg8A9psv9n-JHsONsYr3mE'
-genai.configure(api_key=GEMINI_API_KEY)#os.getenv("GEMINI_API_KEY"))
+genai.configure(os.getenv("GEMINI_API_KEY"))
 
 # El "System Prompt" que define las reglas y personalidad de la IA
 GEMINI_SYSTEM_PROMPT = """
@@ -252,42 +258,6 @@ def gemini_chat():
     except Exception as e:
         print(f"Error en la API de Gemini: {e}")
         return jsonify({'error': 'Error al procesar la solicitud con la IA'}), 500
-
-
-# --- CLAVE SECRETA DE RECAPTCHA ---
-# ¡MUY IMPORTANTE! Guarda esto como una variable de entorno, no directamente en el código
-# En tu terminal: export RECAPTCHA_SECRET_KEY="TU_CLAVE_SECRETA_AQUI"
-RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'#os.getenv("RECAPTCHA_SECRET_KEY")
-
-# --- NUEVO ENDPOINT PARA VERIFICACIÓN ---
-@app.route('/verify-captcha', methods=['POST'])
-def verify_captcha():
-    if not RECAPTCHA_SECRET_KEY:
-        return jsonify({'success': False, 'error': 'La clave secreta del servidor no está configurada.'}), 500
-
-    data = request.json
-    token = data.get('g-recaptcha-response')
-
-    if not token:
-        return jsonify({'success': False, 'error': 'Falta el token de reCAPTCHA.'}), 400
-
-    # Llama a la API de Google para verificar el token
-    verification_url = 'https://www.google.com/recaptcha/api/siteverify'
-    payload = {
-        'secret': RECAPTCHA_SECRET_KEY,
-        'response': token,
-        'remoteip': request.remote_addr
-    }
-    
-    response = requests.post(verification_url, data=payload)
-    result = response.json()
-
-    # Google responde con un campo "success" que puede ser true o false
-    if result.get('success'):
-        return jsonify({'success': True})
-    else:
-        print("Fallo en la verificación de reCAPTCHA:", result.get('error-codes'))
-        return jsonify({'success': False, 'error-codes': result.get('error-codes')})
-    
+   
 if __name__ == '__main__':
     app.run(debug=True)
