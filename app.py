@@ -189,7 +189,8 @@ def victory(room_name):
 # ¡MUY IMPORTANTE! Guarda tu clave de API como una variable de entorno
 # En tu terminal, ejecuta: export GEMINI_API_KEY="TU_API_KEY"
 
-genai.configure(os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 # El "System Prompt" que define las reglas y personalidad de la IA
 GEMINI_SYSTEM_PROMPT = """
