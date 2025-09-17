@@ -19,10 +19,10 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
 
     // --- Estado del Juego ---
     let gameState = {};
-    let activeTraps = {}; // Nuevo: Almacena el estado de las trampas
+    let activeTraps = {};
+    let isMoving = false; // --- FIX: Bandera para prevenir spam de movimiento ---
 
     // --- [FIX] Crear el contenedor de pistas al inicio ---
-    const uiContainer = document.getElementById('ui');
     if (!document.getElementById('riddles-ui')) {
         const riddlesUI = document.createElement('div');
         riddlesUI.id = 'riddles-ui';
@@ -39,11 +39,10 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
         logEl.prepend(p);
     }
 
-    // --- REFACTOR: Función para actualizar solo las trampas ---
     function updateTrapVisuals() {
         const trapTiles = mapEl.querySelectorAll('.trap');
         trapTiles.forEach(tile => {
-            const key = tile.dataset.key; // Necesitamos almacenar la clave en el elemento
+            const key = tile.dataset.key;
             if (activeTraps[key]) {
                 tile.classList.add('revealed');
             } else {
@@ -70,7 +69,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
                 cell.classList.add('tile');
                 const type = map[y][x];
                 const key = `${x},${y}`;
-                cell.dataset.key = key; // Almacenar la clave para la actualización de trampas
+                cell.dataset.key = key;
 
                 if (type === 0) cell.classList.add('floor');
                 else if (type === 1) cell.classList.add('wall');
@@ -92,7 +91,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
             }
         }
 
-        updateTrapVisuals(); // Llamada inicial para mostrar las trampas
+        updateTrapVisuals();
 
         posEl.textContent = `${player.x}, ${player.y}`;
         livesEl.textContent = '❤️'.repeat(player.lives > 0 ? player.lives : 0);
@@ -122,11 +121,16 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     }
 
     async function move(dx, dy) {
-        if (gameState.game_over) return;
-        const response = await fetch('/api/minecraft/map/move', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dx, dy })
-        });
-        await handleApiResponse(response);
+        if (gameState.game_over || isMoving) return; // FIX: No moverse si ya hay un movimiento en curso
+        isMoving = true; // FIX: Activar la bandera
+        try {
+            const response = await fetch('/api/minecraft/map/move', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dx, dy })
+            });
+            await handleApiResponse(response);
+        } finally {
+            isMoving = false; // FIX: Desactivar la bandera al finalizar
+        }
     }
 
     async function tryCode() {
@@ -140,14 +144,13 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     }
 
     function endGame(didWin) {
-        clearInterval(pollerInterval); // Detener el poller
+        clearInterval(pollerInterval);
         document.querySelectorAll('.btn, input').forEach(b => b.disabled = true);
         window.onkeydown = null;
         if (didWin) setTimeout(() => submitWin(roomName, stageName, winToken), 1500);
         else setTimeout(() => failGame("Has sucumbido a las trampas del laberinto.", roomName), 1500);
     }
 
-    // --- REFACTOR: Poller para el estado de las trampas ---
     async function pollTrapState() {
         if (gameState.game_over) return;
         try {
@@ -166,7 +169,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     try {
         const response = await fetch('/api/minecraft/map/start', { method: 'POST' });
         await handleApiResponse(response);
-        pollerInterval = setInterval(pollTrapState, 500); // Iniciar el poller
+        pollerInterval = setInterval(pollTrapState, 500);
     } catch (error) {
         log("Error fatal al iniciar la partida.");
     }
