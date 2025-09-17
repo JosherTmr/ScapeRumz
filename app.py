@@ -282,14 +282,17 @@ def move_bunker_player():
     log_message = ""
     game_over = False
     win = False
+    effects = [] # Lista de efectos visuales para el frontend
 
     if tile_type == 1: # Wall
-        return jsonify(game) # No change
+        game['effects'] = effects
+        return jsonify(game)
 
     key = f"{nx},{ny}"
     if tile_type == 2 and not game['doors'].get(key, {}).get('open', False):
         log_message = f"ALERTA: Puerta {key} sellada."
         game['log_message'] = log_message
+        game['effects'] = effects
         return jsonify(game)
 
     # Valid move, update position
@@ -309,6 +312,7 @@ def move_bunker_player():
         if is_trap_active:
             player['lives'] -= 1
             log_message = "¡Peligro! Has pisado una trampa activa. Vidas -1."
+            effects.append('shake') # Añadir efecto shake
             if player['lives'] <= 0:
                 game_over = True
                 win = False
@@ -321,6 +325,7 @@ def move_bunker_player():
     game['log_message'] = log_message
     game['game_over'] = game_over
     game['win'] = win
+    game['effects'] = effects
     session['bunker_game'] = game
     session.modified = True
     return jsonify(game)
@@ -356,6 +361,125 @@ def solve_bunker_puzzle():
 
     game['log_message'] = log_message
     session['bunker_game'] = game
+    session.modified = True
+    return jsonify(game)
+
+
+# --- Juego 3 (Minecraft): Mapa del Santuario ---
+MINECRAFT_MAP_DATA = {
+    'map': [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,4,0,0,5,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1,4,4,4,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,4,1,1,1,0,1,1,1,1,1,1,4,4,4,1,1,1,1,1,1,4,0,0,0,4,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,4,0,0,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,0,0,0,5,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+        [1,1,1,1,0,0,0,0,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+        [1,1,1,1,0,3,0,0,2,0,1,1,0,0,0,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1],
+        [1,1,1,1,0,0,0,0,1,0,1,1,1,1,0,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,4,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,0,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    'riddles': {
+        "32,2": { "question": "Resuelve: 15 * 12 / 3", "answer": "60", "doorKey": "12,13" },
+        "32,14": { "question": "Binario a decimal: 1101", "answer": "13", "doorKey": "18,18" },
+        "18,20": { "question": "Si f(x)=2x+3, ¿cuánto vale f(7)?", "answer": "17", "doorKey": "8,17" }
+    }
+}
+
+@app.route('/api/minecraft/map/start', methods=['POST'])
+def start_minecraft_map_game():
+    doors = {r['doorKey']: {'open': False} for r in MINECRAFT_MAP_DATA['riddles'].values()}
+    session['minecraft_map_game'] = {
+        'map': MINECRAFT_MAP_DATA['map'],
+        'player': {'x': 2, 'y': 10, 'lives': 3},
+        'doors': doors,
+        'riddles': MINECRAFT_MAP_DATA['riddles'],
+        'found_riddles': {},
+        'triggered_traps': set()
+    }
+    session.modified = True
+    return jsonify({k: v for k, v in session['minecraft_map_game'].items() if k != 'riddles'})
+
+@app.route('/api/minecraft/map/move', methods=['POST'])
+def move_minecraft_player():
+    game = session.get('minecraft_map_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    dx = request.json.get('dx', 0); dy = request.json.get('dy', 0)
+    player = game['player']
+    nx, ny = player['x'] + dx, player['y'] + dy
+
+    if not (0 <= nx < 38 and 0 <= ny < 22): return jsonify({'error': 'Move out of bounds'}), 400
+
+    tile_type = game['map'][ny][nx]
+    log_message = ""
+    game_over, win, effects = False, False, []
+
+    if tile_type == 1: # Wall
+        return jsonify(game)
+
+    key = f"{nx},{ny}"
+    if tile_type == 2 and not game['doors'].get(key, {}).get('open', False):
+        log_message = "La puerta está cerrada."
+    else:
+        player['x'], player['y'] = nx, ny
+        if tile_type == 3:
+            log_message, game_over, win = "¡Encontraste la meta! ¡Has escapado!", True, True
+        elif tile_type == 4:
+            if key not in game['triggered_traps']:
+                player['lives'] -= 1
+                log_message = "¡Caíste en una trampa! Pierdes una vida."
+                effects.append('shake')
+                game['triggered_traps'].add(key)
+                if player['lives'] <= 0:
+                    game_over, win = True, False
+        elif tile_type == 5:
+            riddle = game['riddles'].get(key)
+            if riddle and key not in game['found_riddles']:
+                game['found_riddles'][key] = riddle
+                log_message = f'Hallaste una nota: "{riddle["question"]}"'
+
+    game['log_message'] = log_message
+    game['game_over'] = game_over
+    game['win'] = win
+    game['effects'] = effects
+    session['minecraft_map_game'] = game
+    session.modified = True
+    return jsonify({k: v if not isinstance(v, set) else list(v) for k, v in game.items()})
+
+@app.route('/api/minecraft/map/solve', methods=['POST'])
+def solve_minecraft_map_riddle():
+    game = session.get('minecraft_map_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    code = request.json.get('code', '').lower().strip()
+    player = game['player']
+    log_message = 'El código no funciona aquí.'
+
+    for dx, dy in [(1,0), (-1,0), (0,1), (0,-1)]:
+        key = f"{player['x'] + dx},{player['y'] + dy}"
+        riddle = game['riddles'].get(key)
+        if riddle and riddle['answer'].lower() == code:
+            door_key = riddle['doorKey']
+            if door_key in game['doors']:
+                game['doors'][door_key]['open'] = True
+                log_message = f"La puerta ({code}) se abre."
+                break
+
+    game['log_message'] = log_message
+    session['minecraft_map_game'] = game
     session.modified = True
     return jsonify(game)
 

@@ -58,21 +58,18 @@ async function initStaticApocalypseMap(roomName, stageName, winToken) {
 
     function startTrapCycle(serverStartTime) {
         const clientStartTime = Date.now();
-        // Calcular la diferencia de tiempo entre el reloj del cliente y el del servidor
         const serverTimeOffset = (serverStartTime * 1000) - clientStartTime;
 
         trapIntervalId = setInterval(() => {
             const correctedTime = Date.now() + serverTimeOffset;
             const timeSinceStart = correctedTime - (serverStartTime * 1000);
 
-            // Actualizar el estado visual de cada trampa individualmente
             if (gameState.map && gameState.trap_offsets) {
                 gameState.map.forEach((row, y) => {
                     row.forEach((tileType, x) => {
                         if (tileType === 4) {
                             const key = coordKey(x, y);
-                            const offset = gameState.trap_offsets[key] * 1000; // a milisegundos
-                            // Cada trampa tiene su propio ciclo basado en su desfase
+                            const offset = (gameState.trap_offsets[key] || 0) * 1000;
                             const isTrapActive = ((timeSinceStart + offset) % TRAP_INTERVAL) < (TRAP_INTERVAL / 2);
                             visualTraps[key] = isTrapActive;
                         }
@@ -80,7 +77,7 @@ async function initStaticApocalypseMap(roomName, stageName, winToken) {
                 });
             }
             render();
-        }, 500); // Actualizar visualmente con frecuencia para que sea fluido
+        }, 500);
     }
 
     function render() {
@@ -156,6 +153,16 @@ async function initStaticApocalypseMap(roomName, stageName, winToken) {
         gameState = await response.json();
 
         log(gameState.log_message);
+
+        // Handle visual effects sent from the backend
+        if (gameState.effects && gameState.effects.includes('shake')) {
+            const gameContainer = document.querySelector('.game-wrap');
+            gameContainer.classList.add('shake-animation');
+            gameContainer.addEventListener('animationend', () => {
+                gameContainer.classList.remove('shake-animation');
+            }, { once: true });
+        }
+
         render();
 
         // Check for interactions on the new tile
