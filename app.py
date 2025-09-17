@@ -497,18 +497,31 @@ def solve_minecraft_map_riddle():
     if not game: return jsonify({'error': 'Game not started'}), 400
 
     code = request.json.get('code', '').lower().strip()
-    player = game['player']
-    log_message = 'El código no funciona aquí.'
+    log_message = f"El código '{code}' no parece correcto para ningún acertijo que hayas encontrado."
+    found_match = False
 
-    for dx, dy in [(1,0), (-1,0), (0,1), (0,-1)]:
-        key = f"{player['x'] + dx},{player['y'] + dy}"
-        riddle = game['riddles'].get(key)
-        if riddle and riddle['answer'].lower() == code:
-            door_key = riddle['doorKey']
-            if door_key in game['doors']:
-                game['doors'][door_key]['open'] = True
-                log_message = f"La puerta ({code}) se abre."
+    # REFACTOR: Check the code against all *found* riddles, not adjacent tiles.
+    for riddle_key, riddle_data in game.get('found_riddles', {}).items():
+        if code == riddle_data.get('answer', '').lower():
+            door_key = riddle_data.get('doorKey')
+            if door_key and door_key in game['doors']:
+                if not game['doors'][door_key]['open']:
+                    game['doors'][door_key]['open'] = True
+                    log_message = f"¡Correcto! El código '{code}' ha abierto una puerta."
+                else:
+                    log_message = f"El código '{code}' es correcto, pero la puerta ya estaba abierta."
+                found_match = True
                 break
+
+    if not found_match and code:
+        player = game.get('player')
+        if player:
+            player['lives'] = max(0, player.get('lives', 1) - 1)
+            log_message += " Has perdido una vida por el intento fallido."
+            if player['lives'] <= 0:
+                game['game_over'] = True
+                game['win'] = False
+
 
     game['log_message'] = log_message
     session['minecraft_map_game'] = game
