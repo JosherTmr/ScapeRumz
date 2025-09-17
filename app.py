@@ -401,16 +401,25 @@ MINECRAFT_MAP_DATA = {
 @app.route('/api/minecraft/map/start', methods=['POST'])
 def start_minecraft_map_game():
     doors = {r['doorKey']: {'open': False} for r in MINECRAFT_MAP_DATA['riddles'].values()}
+
+    # --- REFACTOR: Add dynamic traps logic from AI game ---
+    trap_offsets = {}
+    for y, row in enumerate(MINECRAFT_MAP_DATA['map']):
+        for x, tile_type in enumerate(row):
+            if tile_type == 4: # It's a trap
+                trap_offsets[f"{x},{y}"] = random.random() * 4 # Random offset for unique cycle
+
     session['minecraft_map_game'] = {
         'map': MINECRAFT_MAP_DATA['map'],
         'player': {'x': 2, 'y': 10, 'lives': 3},
         'doors': doors,
         'riddles': MINECRAFT_MAP_DATA['riddles'],
         'found_riddles': {},
-        'triggered_traps': []  # FIX: Use a list instead of a set for JSON serialization
+        'start_time': time.time(),
+        'trap_offsets': trap_offsets # Store the offsets
     }
     session.modified = True
-    # No need to convert set to list anymore, but this ensures consistency
+
     game_state = {k: v for k, v in session['minecraft_map_game'].items()}
     return jsonify({k: v for k, v in game_state.items() if k != 'riddles'})
 
@@ -440,11 +449,16 @@ def move_minecraft_player():
         if tile_type == 3:
             log_message, game_over, win = "¡Encontraste la meta! ¡Has escapado!", True, True
         elif tile_type == 4:
-            if key not in game['triggered_traps']:
+            # --- REFACTOR: Use time-based trap logic ---
+            offset = game.get('trap_offsets', {}).get(key, 0)
+            time_since_start = time.time() - game['start_time']
+            # Cycle of 4 seconds: 2s active, 2s inactive
+            is_trap_active = ((time_since_start + offset) % 4) < 2
+
+            if is_trap_active:
                 player['lives'] -= 1
-                log_message = "¡Caíste en una trampa! Pierdes una vida."
+                log_message = "¡Caíste en una trampa activa! Pierdes una vida."
                 effects.append('shake')
-                game['triggered_traps'].append(key)  # FIX: Use append for lists
                 if player['lives'] <= 0:
                     game_over, win = True, False
         elif tile_type == 5:
@@ -459,8 +473,23 @@ def move_minecraft_player():
     game['effects'] = effects
     session['minecraft_map_game'] = game
     session.modified = True
-    # No need to convert set to list anymore
     return jsonify({k: v for k, v in game.items()})
+
+@app.route('/api/minecraft/map/state', methods=['GET'])
+def get_minecraft_map_state():
+    game = session.get('minecraft_map_game')
+    if not game:
+        return jsonify({'error': 'Game not started'}), 400
+
+    time_now = time.time()
+    time_since_start = time_now - game['start_time']
+
+    active_traps = {}
+    for key, offset in game.get('trap_offsets', {}).items():
+        is_trap_active = ((time_since_start + offset) % 4) < 2
+        active_traps[key] = is_trap_active
+
+    return jsonify({'active_traps': active_traps})
 
 @app.route('/api/minecraft/map/solve', methods=['POST'])
 def solve_minecraft_map_riddle():

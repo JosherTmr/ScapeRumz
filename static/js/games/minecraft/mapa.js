@@ -1,6 +1,6 @@
 /**
  * =============================================================
- * Juego 3: El Mapa del Santuario (Backend-Driven)
+ * Juego 3: El Mapa del Santuario (Backend-Driven & Dynamic Traps)
  * =============================================================
  */
 async function initMapAdventureGame(roomName, stageName, winToken) {
@@ -12,28 +12,44 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     const codeInput = document.getElementById('code-input');
     const tryCodeBtn = document.getElementById('try-code');
 
-    // --- Configuración Visual ---
+    // --- Configuración ---
     const COLS = 38;
     const ROWS = 22;
+    let pollerInterval;
 
-    // --- Estado del Juego (mínimo en el cliente) ---
+    // --- Estado del Juego ---
     let gameState = {};
+    let activeTraps = {}; // Nuevo: Almacena el estado de las trampas
 
     // --- [FIX] Crear el contenedor de pistas al inicio ---
     const uiContainer = document.getElementById('ui');
-    const riddlesUI = document.createElement('div');
-    riddlesUI.id = 'riddles-ui';
-    riddlesUI.innerHTML = '<strong>Pistas Encontradas</strong><div id="riddles-list" style="margin-top:6px; font-size:13px; min-height: 20px; display:flex; flex-direction:column; gap: 4px;"></div>';
-    riddlesUI.style.marginTop = '16px';
-    // Insertar el nuevo UI de pistas después de los controles de código
-    logEl.before(riddlesUI);
+    if (!document.getElementById('riddles-ui')) {
+        const riddlesUI = document.createElement('div');
+        riddlesUI.id = 'riddles-ui';
+        riddlesUI.innerHTML = '<strong>Pistas Encontradas</strong><div id="riddles-list" style="margin-top:6px; font-size:13px; min-height: 20px; display:flex; flex-direction:column; gap: 4px;"></div>';
+        riddlesUI.style.marginTop = '16px';
+        logEl.before(riddlesUI);
+    }
 
-    // --- Funciones Auxiliares ---
+    // --- Funciones ---
     function log(text) {
         if (!text) return;
         const p = document.createElement('div');
         p.textContent = `> ${text}`;
         logEl.prepend(p);
+    }
+
+    // --- REFACTOR: Función para actualizar solo las trampas ---
+    function updateTrapVisuals() {
+        const trapTiles = mapEl.querySelectorAll('.trap');
+        trapTiles.forEach(tile => {
+            const key = tile.dataset.key; // Necesitamos almacenar la clave en el elemento
+            if (activeTraps[key]) {
+                tile.classList.add('revealed');
+            } else {
+                tile.classList.remove('revealed');
+            }
+        });
     }
 
     function render() {
@@ -45,7 +61,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
         const isVisible = (x, y) => {
             const dx = Math.abs(player.x - x);
             const dy = Math.abs(player.y - y);
-            return (dx * dx + dy * dy) <= 25; // Radio de visión
+            return (dx * dx + dy * dy) <= 25;
         };
 
         for (let y = 0; y < ROWS; y++) {
@@ -54,6 +70,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
                 cell.classList.add('tile');
                 const type = map[y][x];
                 const key = `${x},${y}`;
+                cell.dataset.key = key; // Almacenar la clave para la actualización de trampas
 
                 if (type === 0) cell.classList.add('floor');
                 else if (type === 1) cell.classList.add('wall');
@@ -75,17 +92,16 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
             }
         }
 
+        updateTrapVisuals(); // Llamada inicial para mostrar las trampas
+
         posEl.textContent = `${player.x}, ${player.y}`;
         livesEl.textContent = '❤️'.repeat(player.lives > 0 ? player.lives : 0);
 
-        // Ahora este elemento siempre existirá
         const listEl = document.getElementById('riddles-list');
         listEl.innerHTML = '';
         for (const key in found_riddles) {
             const d = document.createElement('div');
-            d.style.background = '#0e1416';
-            d.style.padding = '6px 8px';
-            d.style.borderRadius = '4px';
+            d.style.background = '#0e1416'; d.style.padding = '6px 8px'; d.style.borderRadius = '4px';
             d.textContent = `❓ ${found_riddles[key].question}`;
             listEl.appendChild(d);
         }
@@ -93,34 +109,22 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
 
     async function handleApiResponse(response) {
         if (!response.ok) {
-            console.error("API request failed:", response);
-            log("Error de conexión con el servidor.");
-            return;
+            log("Error de conexión con el servidor."); return;
         }
         gameState = await response.json();
-
         log(gameState.log_message);
-
         if (gameState.effects && gameState.effects.includes('shake')) {
             document.body.classList.add('shake-animation');
-            document.body.addEventListener('animationend', () => {
-                document.body.classList.remove('shake-animation');
-            }, { once: true });
+            document.body.addEventListener('animationend', () => document.body.classList.remove('shake-animation'), { once: true });
         }
-
         render();
-
-        if (gameState.game_over) {
-            endGame(gameState.win);
-        }
+        if (gameState.game_over) endGame(gameState.win);
     }
 
     async function move(dx, dy) {
         if (gameState.game_over) return;
         const response = await fetch('/api/minecraft/map/move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dx, dy })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dx, dy })
         });
         await handleApiResponse(response);
     }
@@ -128,23 +132,33 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     async function tryCode() {
         const code = codeInput.value.trim();
         if (!code || gameState.game_over) return;
-
         const response = await fetch('/api/minecraft/map/solve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: code })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code })
         });
         codeInput.value = '';
         await handleApiResponse(response);
     }
 
     function endGame(didWin) {
-        document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+        clearInterval(pollerInterval); // Detener el poller
+        document.querySelectorAll('.btn, input').forEach(b => b.disabled = true);
         window.onkeydown = null;
-        if (didWin) {
-            setTimeout(() => submitWin(roomName, stageName, winToken), 1500);
-        } else {
-            setTimeout(() => failGame("Has sucumbido a las trampas del laberinto.", roomName), 1500);
+        if (didWin) setTimeout(() => submitWin(roomName, stageName, winToken), 1500);
+        else setTimeout(() => failGame("Has sucumbido a las trampas del laberinto.", roomName), 1500);
+    }
+
+    // --- REFACTOR: Poller para el estado de las trampas ---
+    async function pollTrapState() {
+        if (gameState.game_over) return;
+        try {
+            const response = await fetch('/api/minecraft/map/state');
+            const data = await response.json();
+            if (data.active_traps) {
+                activeTraps = data.active_traps;
+                updateTrapVisuals();
+            }
+        } catch (e) {
+            console.error("Trap state poll failed:", e);
         }
     }
 
@@ -152,8 +166,8 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     try {
         const response = await fetch('/api/minecraft/map/start', { method: 'POST' });
         await handleApiResponse(response);
+        pollerInterval = setInterval(pollTrapState, 500); // Iniciar el poller
     } catch (error) {
-        console.error("Error starting game:", error);
         log("Error fatal al iniciar la partida.");
     }
 
@@ -164,13 +178,9 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     document.getElementById('btn-right').addEventListener('click', () => move(1, 0));
     tryCodeBtn.addEventListener('click', tryCode);
     codeInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') tryCode(); });
-
     window.onkeydown = (e) => {
         if (document.activeElement === codeInput) return;
         const keyMap = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0] };
-        if (keyMap[e.key]) {
-            e.preventDefault();
-            move(...keyMap[e.key]);
-        }
+        if (keyMap[e.key]) { e.preventDefault(); move(...keyMap[e.key]); }
     };
 }
