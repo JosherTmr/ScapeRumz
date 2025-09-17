@@ -407,11 +407,11 @@ def start_minecraft_map_game():
         'doors': doors,
         'riddles': MINECRAFT_MAP_DATA['riddles'],
         'found_riddles': {},
-        'triggered_traps': set()
+        'triggered_traps': []  # FIX: Use a list instead of a set for JSON serialization
     }
     session.modified = True
-    # Convert set to list for JSON serialization
-    game_state = {k: v if not isinstance(v, set) else list(v) for k, v in session['minecraft_map_game'].items()}
+    # No need to convert set to list anymore, but this ensures consistency
+    game_state = {k: v for k, v in session['minecraft_map_game'].items()}
     return jsonify({k: v for k, v in game_state.items() if k != 'riddles'})
 
 @app.route('/api/minecraft/map/move', methods=['POST'])
@@ -444,7 +444,7 @@ def move_minecraft_player():
                 player['lives'] -= 1
                 log_message = "¡Caíste en una trampa! Pierdes una vida."
                 effects.append('shake')
-                game['triggered_traps'].add(key)
+                game['triggered_traps'].append(key)  # FIX: Use append for lists
                 if player['lives'] <= 0:
                     game_over, win = True, False
         elif tile_type == 5:
@@ -459,7 +459,8 @@ def move_minecraft_player():
     game['effects'] = effects
     session['minecraft_map_game'] = game
     session.modified = True
-    return jsonify({k: v if not isinstance(v, set) else list(v) for k, v in game.items()})
+    # No need to convert set to list anymore
+    return jsonify({k: v for k, v in game.items()})
 
 @app.route('/api/minecraft/map/solve', methods=['POST'])
 def solve_minecraft_map_riddle():
