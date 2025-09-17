@@ -19,6 +19,15 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
     // --- Estado del Juego (mínimo en el cliente) ---
     let gameState = {};
 
+    // --- [FIX] Crear el contenedor de pistas al inicio ---
+    const uiContainer = document.getElementById('ui');
+    const riddlesUI = document.createElement('div');
+    riddlesUI.id = 'riddles-ui';
+    riddlesUI.innerHTML = '<strong>Pistas Encontradas</strong><div id="riddles-list" style="margin-top:6px; font-size:13px; min-height: 20px; display:flex; flex-direction:column; gap: 4px;"></div>';
+    riddlesUI.style.marginTop = '16px';
+    // Insertar el nuevo UI de pistas después de los controles de código
+    logEl.before(riddlesUI);
+
     // --- Funciones Auxiliares ---
     function log(text) {
         if (!text) return;
@@ -36,7 +45,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
         const isVisible = (x, y) => {
             const dx = Math.abs(player.x - x);
             const dy = Math.abs(player.y - y);
-            return (dx * dx + dy * dy) <= 16; // Aumentar un poco el radio de visión
+            return (dx * dx + dy * dy) <= 25; // Radio de visión
         };
 
         for (let y = 0; y < ROWS; y++) {
@@ -50,7 +59,7 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
                 else if (type === 1) cell.classList.add('wall');
                 else if (type === 2) { cell.classList.add('door'); if (doors[key] && doors[key].open) cell.classList.add('open'); }
                 else if (type === 3) cell.classList.add('goal');
-                else if (type === 4) cell.classList.add('trap'); // El estado revelado se manejará por separado si es necesario
+                else if (type === 4) cell.classList.add('trap');
                 else if (type === 5) {
                     cell.classList.add('clue');
                     if (found_riddles[key]) cell.classList.add('triggered');
@@ -69,18 +78,16 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
         posEl.textContent = `${player.x}, ${player.y}`;
         livesEl.textContent = '❤️'.repeat(player.lives > 0 ? player.lives : 0);
 
-        const riddlesUI = document.getElementById('riddles-ui');
-        if (riddlesUI) {
-            const listEl = document.getElementById('riddles-list');
-            listEl.innerHTML = '';
-            for (const key in found_riddles) {
-                const d = document.createElement('div');
-                d.style.background = '#0e1416';
-                d.style.padding = '6px 8px';
-                d.style.borderRadius = '4px';
-                d.textContent = `❓ ${found_riddles[key].question}`;
-                listEl.appendChild(d);
-            }
+        // Ahora este elemento siempre existirá
+        const listEl = document.getElementById('riddles-list');
+        listEl.innerHTML = '';
+        for (const key in found_riddles) {
+            const d = document.createElement('div');
+            d.style.background = '#0e1416';
+            d.style.padding = '6px 8px';
+            d.style.borderRadius = '4px';
+            d.textContent = `❓ ${found_riddles[key].question}`;
+            listEl.appendChild(d);
         }
     }
 
@@ -166,13 +173,4 @@ async function initMapAdventureGame(roomName, stageName, winToken) {
             move(...keyMap[e.key]);
         }
     };
-
-    // Crear el contenedor de pistas si no existe
-    if (!document.getElementById('riddles-ui')) {
-        const riddlesUI = document.createElement('div');
-        riddlesUI.id = 'riddles-ui';
-        riddlesUI.innerHTML = '<strong>Pistas Encontradas</strong><div id="riddles-list" style="margin-top:6px; font-size:13px; min-height: 20px; display:flex; flex-direction:column; gap: 4px;"></div>';
-        riddlesUI.style.marginTop = '16px';
-        logEl.before(riddlesUI);
-    }
 }

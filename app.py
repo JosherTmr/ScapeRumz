@@ -508,31 +508,52 @@ def start_luz_roja():
         'progress': 0
     })
 
+@app.route('/api/squid/luzroja/state', methods=['GET'])
+def get_luz_roja_state():
+    game = session.get('luzroja_game')
+    if not game:
+        return jsonify({'error': 'Game not started'}), 400
+
+    time_now = time.time()
+    time_left = (game['start_time'] + LUZ_ROJA_CONFIG['duration']) - time_now
+
+    if time_left <= 0:
+        return jsonify({'game_over': True, 'win': False, 'message': '¡Se acabó el tiempo!', 'light_state': 'red', 'time_left': 0})
+
+    # Update light state based on time
+    if time_now > game['next_change']:
+        current_light = game.get('light_state', 'green')
+        if current_light == 'green':
+            game['light_state'] = 'yellow'
+            game['next_change'] = time_now + 0.75  # Yellow light is quick
+        elif current_light == 'yellow':
+            game['light_state'] = 'red'
+            game['next_change'] = time_now + (random.random() * 1.5 + 1)  # Red light duration
+        elif current_light == 'red':
+            game['light_state'] = 'green'
+            game['next_change'] = time_now + (random.random() * 2 + 1.5) # Green light duration
+        session.modified = True
+
+    return jsonify({
+        'light_state': game['light_state'],
+        'time_left': round(time_left),
+        'progress': game['progress'],
+        'game_over': False
+    })
+
+
 @app.route('/api/squid/luzroja/run', methods=['POST'])
 def run_luz_roja():
     game = session.get('luzroja_game')
-    if not game: return jsonify({'error': 'Game not started'}), 400
+    if not game:
+        return jsonify({'error': 'Game not started'}), 400
 
-    time_now = time.time()
-    if time_now > game['start_time'] + LUZ_ROJA_CONFIG['duration']:
-        return jsonify({'game_over': True, 'win': False, 'message': '¡Se acabó el tiempo!'})
-
-    # Update light state before checking the run
-    if time_now > game['next_change']:
-        if game['light_state'] == 'green':
-            game['light_state'] = 'yellow'
-            game['next_change'] = time_now + 0.75
-        elif game['light_state'] == 'yellow':
-            game['light_state'] = 'red'
-            game['next_change'] = time_now + (random.random() * 2 + 1)
-        elif game['light_state'] == 'red':
-            game['light_state'] = 'green'
-            game['next_change'] = time_now + (random.random() * 2 + 1.5)
-
-    # Check the run against the current light state
-    if game['light_state'] != 'green':
+    # Check if the player ran during a red or yellow light
+    # This state is updated by the /state endpoint, so it's the most recent state
+    if game.get('light_state') != 'green':
         return jsonify({'game_over': True, 'win': False, 'message': '¡Te moviste con la luz incorrecta!'})
 
+    # If the light is green, increase progress
     game['progress'] += LUZ_ROJA_CONFIG['progress_per_run']
 
     win = game['progress'] >= LUZ_ROJA_CONFIG['progress_needed']
@@ -545,7 +566,7 @@ def run_luz_roja():
         'new_progress': game['progress'],
         'game_over': game_over,
         'win': win,
-        'light_state': game['light_state'] # Also return current light state
+        'message': '¡Sigue corriendo!' if not win else '¡Has llegado a la meta!'
     })
 
 # --- Juego 1 (AI): ¿Real o IA? ---
