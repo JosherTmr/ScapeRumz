@@ -45,6 +45,18 @@ async function initStaticApocalypseMap(roomName, stageName, winToken) {
             if (!response.ok) throw new Error('Failed to start game');
             gameState = await response.json();
             log('Sistema: Sobreviviente detectado. Accede al búnker de seguridad.');
+
+            // --- CORRECCIÓN DE BUG ---
+            // Poblar el objeto visualTraps para que el ciclo de animación funcione.
+            visualTraps = {}; // Limpiar por si acaso
+            gameState.map.forEach((row, y) => {
+                row.forEach((tileType, x) => {
+                    if (tileType === 4) {
+                        visualTraps[coordKey(x, y)] = false; // Inicializar todas las trampas como inactivas visualmente
+                    }
+                });
+            });
+
             render();
             startTrapCycle();
         } catch (error) {
