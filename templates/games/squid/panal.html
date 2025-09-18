@@ -30,8 +30,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/squid/panal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/squid/panal.min.js') }}"></script>
 <script>
     initPanalGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>

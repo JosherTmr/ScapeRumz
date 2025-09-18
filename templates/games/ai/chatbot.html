@@ -89,8 +89,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/ai/ai_chatbot.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/ai/ai_chatbot.min.js') }}"></script>
 <script>
     initChatbotGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>

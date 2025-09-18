@@ -137,8 +137,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/minecraft/cards.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/minecraft/cards.min.js') }}"></script>
 <script>
     // Asegúrate de que esta función exista en tu archivo minecraft.js
     initMemoryGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');

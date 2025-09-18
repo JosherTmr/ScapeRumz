@@ -1,12 +1,15 @@
 import time
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_compress import Compress
 import os
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 import requests
 
 app = Flask(__name__)
+compress = Compress(app)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000
 # ¡IMPORTANTE! Cambia esto en un entorno de producción por un valor seguro y aleatorio.
 app.secret_key = 'dev_secret_key_12345'
 
@@ -771,6 +774,9 @@ def gemini_chat():
     except Exception as e:
         print(f"Error en la API de Gemini: {e}")
         return jsonify({'error': 'Error al procesar la solicitud con la IA'}), 500
-   
+
+with app.app_context():
+    app.jinja_env.compile_templates(target='__pycache__', zip=None, log_function=print)
+
 if __name__ == '__main__':
     app.run(debug=True)

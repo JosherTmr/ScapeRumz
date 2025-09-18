@@ -135,8 +135,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/minecraft/cuerda_minecraft.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/minecraft/cuerda_minecraft.min.js') }}"></script>
 <script>
     // Asegúrate de que esta función exista en tu archivo minecraft.js
     initTugOfWarGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');

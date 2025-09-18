@@ -10,8 +10,8 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/squid/puente.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/squid/puente.min.js') }}"></script>
 <script>
     initPuenteGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>

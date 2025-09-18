@@ -30,8 +30,8 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/squid/cuerda.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_utils.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/squid/cuerda.min.js') }}"></script>
 <script>
     initCuerdaGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
 </script>
