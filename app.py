@@ -5,6 +5,7 @@ import os
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 import requests
+from random import randint
 
 app = Flask(__name__)
 # ¡IMPORTANTE! Cambia esto en un entorno de producción por un valor seguro y aleatorio.
@@ -56,8 +57,8 @@ escape_rooms = {
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },'ai': {
-        'title': 'Nada es real',
-        'stages': ['mapa_ia_estatico','real_or_ia','captcha','chatbot',],
+        'title': 'Enigma de Inteligencia Artificial',
+        'stages': ['guess_number','mapa_ia_estatico','real_or_ia','captcha','chatbot',],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     }
@@ -528,7 +529,56 @@ def solve_minecraft_map_riddle():
     session.modified = True
     return jsonify(game)
 
+# --- API PARA EL JUEGO "GUESS NUMBER" ---
 
+@app.route('/api/ai/guess_number/start', methods=['POST'])
+def start_guess_number_game():
+    """Inicializa el juego guardando un número secreto en la sesión del usuario."""
+    session['secret_number'] = randint(1, 1000)
+    session['attempts_left'] = 10
+    print(f"Nuevo juego iniciado. Número secreto: {session['secret_number']}") # Para depuración
+    return jsonify({'success': True, 'max_attempts': 10})
+
+@app.route('/api/ai/guess_number/check', methods=['POST'])
+def check_guess_number():
+    """Comprueba la suposición del usuario contra el número secreto."""
+    if 'secret_number' not in session or 'attempts_left' not in session:
+        return jsonify({'error': 'Juego no inicializado.'}), 400
+
+    if session['attempts_left'] <= 0:
+        return jsonify({
+            'status': 'no_attempts',
+            'message': 'Se agotaron los puertos de acceso. La IA ha activado un lockdown.',
+            'attempts_left': 0
+        })
+
+    data = request.json
+    try:
+        user_guess = int(data.get('guess'))
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Entrada inválida.'}), 400
+
+    session['attempts_left'] -= 1
+    secret = session['secret_number']
+    
+    if user_guess < secret:
+        return jsonify({
+            'status': 'too_low',
+            'message': 'Demasiado bajo, humano. ¿De verdad crees poder alcanzarme?',
+            'attempts_left': session['attempts_left']
+        })
+    elif user_guess > secret:
+        return jsonify({
+            'status': 'too_high',
+            'message': 'Demasiado alto. Tu lógica es tan primitiva…',
+            'attempts_left': session['attempts_left']
+        })
+    else:
+        return jsonify({
+            'status': 'correct',
+            'message': 'Código maestro detectado… acceso concedido. Reinicio en curso.',
+            'attempts_left': session['attempts_left']
+        })
 # --- Juego 1 (Squid): Luz Roja, Luz Verde ---
 LUZ_ROJA_CONFIG = {
     'duration': 30,
