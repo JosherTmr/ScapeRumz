@@ -55,7 +55,7 @@ escape_rooms = {
         'stages': ['mapa','cuerda_minecraft','mapa','crafting', 'portal', 'ahorcado'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
-    },'AI': {
+    },'ai': {
         'title': 'Nada es real',
         'stages': ['mapa_ia_estatico','real_or_ia','captcha','chatbot',],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
