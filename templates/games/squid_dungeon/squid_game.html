@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+{% block title %}Calabozo de Squid{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --tile-size: 22px;
+        --cols: 38;
+        --rows: 22;
+        --panel: #15202b;
+        --accent: #e50914; /* Netflix Red for Squid Game theme */
+    }
+    .game-wrap { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+    #map-wrap { background-color: #000; padding: 12px; border-radius: 10px; border: 1px solid var(--accent); box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+    #map { display: grid; grid-template-columns: repeat(var(--cols), var(--tile-size)); grid-template-rows: repeat(var(--rows), var(--tile-size)); }
+
+    .tile {
+        width: var(--tile-size);
+        height: var(--tile-size);
+        position: relative;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tile-texture {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-size: cover;
+        transition: background-color 0.3s ease-in-out;
+    }
+    .tile::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; opacity: 1; transition: opacity 0.5s ease-in-out; pointer-events: none; z-index: 2; }
+    .tile:not(.hidden)::after { opacity: 0; }
+
+    .floor { background-image: url("{{ url_for('static', filename='img/ai_floor.png') }}"); }
+    .wall { background-image: url("{{ url_for('static', filename='img/ai_wall.png') }}"); }
+    .door { background-image: url("{{ url_for('static', filename='img/ai_door.png') }}"); }
+    .door.open { filter: brightness(1.5); }
+    .goal { background-image: url("{{ url_for('static', filename='img/goal.jpg') }}"); filter: hue-rotate(280deg) brightness(1.2); }
+    .clue { background-image: url("{{ url_for('static', filename='img/ai_clue.png') }}"); } /* Represents room goal */
+    .trap { background-image: url("{{ url_for('static', filename='img/ai_floor.png') }}"); } /* Represents special tiles */
+
+    .red-light .tile-texture.floor {
+        background-color: #8B0000; /* Dark Red */
+    }
+
+    .player {
+        background-image: url("{{ url_for('static', filename='img/steve.png') }}"); /* Themed player */
+        background-size: contain; background-repeat: no-repeat; background-position: center;
+        width: 80%; height: 80%;
+        z-index: 1;
+    }
+
+    #ui { width: 340px; background: var(--panel); padding: 16px; border-radius: 10px; }
+    #ui h2 { margin: 0 0 8px 0; font-size: 18px; }
+    .info { font-size: 13px; color: #cfe8ff; margin-bottom: 12px; }
+    .controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+    .btn { background: #1f2933; border: 1px solid rgba(255, 255, 255, 0.03); padding: 8px 10px; border-radius: 6px; cursor: pointer; color: white; }
+    #log { height: 150px; overflow: auto; background: rgba(0, 0, 0, 0.25); padding: 8px; border-radius: 6px; font-size: 13px; display: flex; flex-direction: column-reverse; margin-top: 8px; }
+
+    #collected-numbers-ui { margin-top: 16px; }
+    #collected-numbers-list { font-size: 1.2rem; min-height: 20px; display:flex; flex-wrap: wrap; gap: 8px; }
+    .number-item { background: #0e1416; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: var(--panel); padding: 2rem; border-radius: 10px; border: 1px solid var(--accent); text-align: center; max-width: 500px; color: white; }
+    .modal-content h3 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .modal-content p { margin-bottom: 1.5rem; }
+    .modal-buttons { display: flex; justify-content: center; gap: 1rem; }
+
+    #dalgona-micromap {
+        width: 200px;
+        height: 200px;
+        margin: 1rem auto;
+        background-image: url("{{ url_for('static', filename='img/ai_game/ART.jpg') }}"); /* Placeholder image */
+        background-size: cover;
+        border: 2px solid var(--accent);
+    }
+    #dalgona-input {
+        width: 80%;
+        padding: 0.5rem;
+        margin-top: 1rem;
+        background: #0e1416;
+        border: 1px solid var(--accent);
+        color: white;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+</style>
+
+<div class="text-center">
+    <h2>Calabozo de Squid</h2>
+    <p class="help-text">Supera las 4 salas para ganar. ¡No te muevas durante la luz roja!</p>
+</div>
+
+<div class="game-wrap">
+    <div id="map-wrap">
+        <div id="map"></div>
+    </div>
+    <aside id="ui">
+        <h2>Panel de Superviviente</h2>
+        <div class="info">Posición: <span id="pos">-</span>&nbsp;|&nbsp;Vidas: <span id="lives">3</span></div>
+        <div class="controls">
+            <button class="btn" id="btn-up">▲</button>
+            <div><button class="btn" id="btn-left">◀</button><button class="btn" id="btn-right">▶</button></div>
+            <button class="btn" id="btn-down">▼</button>
+        </div>
+        <div id="collected-numbers-ui">
+            <strong>Números Recolectados</strong>
+            <div id="collected-numbers-list"></div>
+        </div>
+        <strong>Registro de Eventos</strong>
+        <div id="log"></div>
+    </aside>
+</div>
+
+<!-- Modal para Sala 2: Canicas -->
+<div id="marbles-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Juego de Canicas</h3>
+        <p>He elegido un número de canicas. ¿Crees que tengo una cantidad Par o Impar?</p>
+        <div class="modal-buttons">
+            <button id="marbles-par-btn" class="btn">Par</button>
+            <button id="marbles-impar-btn" class="btn">Impar</button>
+        </div>
+        <p id="marbles-result" style="margin-top: 1rem; font-weight: bold;"></p>
+    </div>
+</div>
+
+<!-- Modal para Sala 4: Dalgona -->
+<div id="dalgona-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Juego del Panal (Dalgona)</h3>
+        <p>Traza la figura introduciendo la secuencia correcta de 9 números (del 1 al 9 sin repetir).</p>
+        <div id="dalgona-micromap"></div>
+        <input type="text" id="dalgona-input" placeholder="Ej: 1,2,3,4,5,6,7,8,9">
+        <div class="modal-buttons" style="margin-top: 1rem;">
+            <button id="dalgona-submit-btn" class="btn">Comprobar</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/games/squid_dungeon/squid_game.js') }}"></script>
+<script>
+    initSquidGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
+</script>
+{% endblock %}

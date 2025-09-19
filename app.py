@@ -61,8 +61,13 @@ escape_rooms = {
         'stages': ['guess_number','mapa_ia_estatico','real_or_ia','captcha','chatbot',],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
+    },
+    'squid_dungeon': {
+        'title': 'Calabozo de Squid',
+        'stages': ['squid_game'],
+        'template_type': 'unique',
+        'data': {}
     }
-
 }
 
 # --- Decorador de Progreso ---
@@ -231,6 +236,41 @@ BUNKER_MAP_DATA = {
         "33,11": { "doorKey": "12,4", "name": "Beta" },
         "10,3": { "doorKey": "7,16", "name": "Gamma" },
         "5,16": { "doorKey": "24,19", "name": "Exit" }
+    }
+}
+
+SQUID_GAME_DATA = {
+    'map': [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,1,1,1,0,1,1,1,1,6,6,6,0,1,1,1,1,1],
+        [1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,1,1,0,0,0,0,0,1,1,0,1,1,1,1,6,6,6,0,1,1,1,1,1],
+        [1,1,1,1,1,1,5,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,6,6,6,5,1,1,1,1,1],
+        [1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,1,1,0,0,0,0,0,1,1,0,1,1,1,1,6,6,6,0,1,1,1,1,1],
+        [1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,1,1,1,0,0,0,1,1,1,0,1,1,1,1,6,6,6,0,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,5,6,6,6,6,6,0,1,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,0,6,6,6,6,6,0,2,0,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    # Tile Types: 0: Camino, 1: Muro, 2: Puerta/Activador, 3: Meta Final,
+    # 5: Meta de Sala, 6: Tile especial (Puente/Luz Roja)
+    'room_definitions': {
+        'sala1': {'entry_door': '28,7', 'start_pos': '29,5'},
+        'sala2': {'entry_door': '10,7', 'start_pos': '6,5'},
+        'sala3': {'entry_door': '13,15', 'start_pos': '6,14'},
+        'sala4': {'entry_door': '18,18', 'start_pos': '19,16'} # Placeholder
     }
 }
 
@@ -528,6 +568,182 @@ def solve_minecraft_map_riddle():
     session['minecraft_map_game'] = game
     session.modified = True
     return jsonify(game)
+
+# --- Juego 2 (Squid): Calabozo de Squid ---
+SALA_3_TRAPS = [
+    (18, 7), (20, 7), (17, 9), (19, 9), (21, 9), # Puente de la muerte
+    (30, 5), (31, 5), (32, 5), # Pasillo trampa
+    (30, 6), (31, 6), (32, 6),
+    (30, 8), (31, 8), (32, 8),
+    (30, 9), (31, 9), (32, 9),
+    (7, 15), (8, 15), (9, 15), (10, 15), (11, 15), # Segundo puente
+    (7, 16), (8, 16), (9, 16), (10, 16), (11, 16)
+]
+
+@app.route('/api/squid/start', methods=['POST'])
+def start_squid_game():
+    session['squid_game'] = {
+        'map': SQUID_GAME_DATA['map'],
+        'player': { 'x': 1, 'y': 2, 'lives': 3 },
+        'game_state': {
+            'red_light_active': False,
+            'last_red_light_toggle': time.time(),
+            'active_room': None,
+            'doors_locked': {
+                '28,7': False, '10,7': False, '13,15': False, '18,18': False
+            }
+        },
+        'collected_numbers': [],
+        'dalgona_pattern': random.sample(range(1, 10), 9)
+    }
+    session.modified = True
+    return jsonify(session['squid_game'])
+
+@app.route('/api/squid/get_state', methods=['GET'])
+def get_squid_game_state():
+    game = session.get('squid_game')
+    if not game:
+        return jsonify({'error': 'Game not started'}), 400
+
+    state = game['game_state']
+    now = time.time()
+
+    # Lógica de Luz Roja/Verde solo para sala1
+    if state['active_room'] == 'sala1':
+        duration = now - state['last_red_light_toggle']
+
+        # Si la luz está verde, ¿debería cambiar a roja?
+        if not state['red_light_active'] and duration > random.uniform(2, 5):
+            state['red_light_active'] = True
+            state['last_red_light_toggle'] = now
+        # Si la luz está roja, ¿debería cambiar a verde?
+        elif state['red_light_active'] and duration > random.uniform(1, 3):
+            state['red_light_active'] = False
+            state['last_red_light_toggle'] = now
+
+    session.modified = True
+    return jsonify(game)
+
+@app.route('/api/squid/move', methods=['POST'])
+def move_squid_player():
+    game = session.get('squid_game')
+    if not game: return jsonify({'error': 'Game not started'}), 400
+
+    dx = request.json.get('dx', 0)
+    dy = request.json.get('dy', 0)
+
+    player = game['player']
+    state = game['game_state']
+    nx, ny = player['x'] + dx, player['y'] + dy
+
+    log_message = ""
+    game_over = False
+    win = False
+
+    if not (0 <= nx < 38 and 0 <= ny < 22):
+        return jsonify(game)
+
+    tile_type = game['map'][ny][nx]
+    if tile_type == 1: # Wall
+        return jsonify(game)
+
+    # Regla: Luz Roja, Luz Verde en Sala 1
+    if state['active_room'] == 'sala1' and state['red_light_active']:
+        player['lives'] -= 1
+        log_message = "¡Te moviste durante la luz roja! Pierdes una vida."
+        if player['lives'] <= 0:
+            game_over = True
+        game['log_message'] = log_message
+        game['game_over'] = game_over
+        session.modified = True
+        return jsonify(game)
+
+    # Update position
+    player['x'], player['y'] = nx, ny
+    pos_key = f"{nx},{ny}"
+
+    if tile_type == 2: # Puerta
+        if not state['doors_locked'].get(pos_key):
+            if pos_key == '28,7': state['active_room'] = 'sala1'
+            elif pos_key == '10,7': state['active_room'] = 'sala2'
+            elif pos_key == '13,15': state['active_room'] = 'sala3'
+            elif pos_key == '18,18': state['active_room'] = 'sala4'
+
+            if state['active_room']:
+                room_def = SQUID_GAME_DATA['room_definitions'][state['active_room']]
+                start_pos = room_def['start_pos'].split(',')
+                player['x'], player['y'] = int(start_pos[0]), int(start_pos[1])
+                state['doors_locked'][pos_key] = True
+                log_message = f"Entrando en {state['active_room']}..."
+
+    elif tile_type == 3: # Meta final
+        win = True
+        game_over = True
+        log_message = "¡Has superado todas las pruebas!"
+
+    elif tile_type == 5: # Meta de sala
+        log_message = f"Has completado la {state['active_room']}."
+        state['active_room'] = None # Vuelve al pasillo
+
+    elif tile_type == 6 and state['active_room'] == 'sala3': # Puente de cristal
+        if (nx, ny) in SALA_3_TRAPS:
+            player['lives'] -= 1
+            log_message = "¡El cristal se rompe! caes y pierdes una vida."
+            start_pos = SQUID_GAME_DATA['room_definitions']['sala3']['start_pos'].split(',')
+            player['x'], player['y'] = int(start_pos[0]), int(start_pos[1])
+            if player['lives'] <= 0:
+                game_over = True
+
+    game['log_message'] = log_message
+    game['win'] = win
+    game['game_over'] = game_over
+    session.modified = True
+    return jsonify(game)
+
+@app.route('/api/squid/play_marbles', methods=['POST'])
+def play_marbles():
+    game = session.get('squid_game')
+    if not game or game['game_state']['active_room'] != 'sala2':
+        return jsonify({'error': 'Invalid game state for marbles'}), 400
+
+    choice = request.json.get('choice') # 'par' or 'impar'
+    if choice not in ['par', 'impar']:
+        return jsonify({'error': 'Invalid choice'}), 400
+
+    number = random.randint(1, 5)
+    is_even = number % 2 == 0
+
+    player_wins = (choice == 'par' and is_even) or (choice == 'impar' and not is_even)
+
+    return jsonify({'win': player_wins, 'number': number})
+
+@app.route('/api/squid/solve_dalgona', methods=['POST'])
+def solve_dalgona():
+    game = session.get('squid_game')
+    if not game or game['game_state']['active_room'] != 'sala4':
+        return jsonify({'error': 'Invalid game state for dalgona'}), 400
+
+    sequence = request.json.get('sequence')
+    if not isinstance(sequence, list) or len(sequence) != 9:
+        return jsonify({'error': 'Invalid sequence'}), 400
+
+    correct_pattern = game['dalgona_pattern']
+    win = (sequence == correct_pattern)
+
+    if win:
+        game['win'] = True
+        game['game_over'] = True
+        log_message = "¡Secuencia correcta! Has ganado el juego."
+    else:
+        game['player']['lives'] -= 1
+        log_message = "Secuencia incorrecta. Has dañado el panal. Pierdes una vida."
+        if game['player']['lives'] <= 0:
+            game['game_over'] = True
+
+    game['log_message'] = log_message
+    session.modified = True
+    return jsonify(game)
+
 
 # --- API PARA EL JUEGO "GUESS NUMBER" ---
 
