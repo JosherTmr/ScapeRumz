@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}El Regreso a Casa{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>El Portal se ha activado.</h2>
+    <p class="lead">Con el último glifo en su lugar, el portal cobra vida con un estruendo, el aire se llena de un remolino de partículas púrpuras. El camino a casa está abierto. Has sobrevivido. Has vencido.</p>
+    <p>Miras por última vez el mundo de bloques que te desafió y te cambió. Con un profundo respiro, das el paso final y te sumerges en el vórtice de luz.</p>
+    <p>La sensación es vertiginosa, un torbellino de colores y sonidos. Y luego... silencio. Estás de vuelta.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Volver a la Realidad</button>
+    </form>
+</div>
+{% endblock %}

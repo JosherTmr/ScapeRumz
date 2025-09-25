@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Resultado: Las Canicas{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Una victoria solitaria.</h2>
+    <p class="lead">Lo has conseguido. Tienes todas las canicas. Pero la victoria se siente vacía, manchada por la traición y la pérdida. Tu oponente, quizás tu amigo, ha sido 'eliminado' por tu culpa. No hay tiempo para el duelo.</p>
+    <p>Quedan pocos jugadores. Te conducen a una sala con un abismo insondable, cruzado por dos puentes paralelos de paneles de cristal. Uno es seguro. El otro es una trampa mortal.</p>
+    <p>El quinto juego es un salto de fe. Elige tu camino con cuidado.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el quinto juego</button>
+    </form>
+</div>
+{% endblock %}

@@ -2,12 +2,13 @@
 {% block title %}El Juego Final{% endblock %}
 {% block content %}
 <div class="text-center">
-    <h2>Has sobrevivido</h2>
-    <p class="lead">Has superado todos los juegos. La fortuna te espera.</p>
-    <p>Solo queda un paso.</p>
+    <h2>Has ganado.</h2>
+    <p class="lead">Estás solo. El último oponente ha caído. Eres el único superviviente de los 456 jugadores. La arena está en silencio, salvo por el sonido de tu propia respiración.</p>
+    <p>Una figura enmascarada se acerca y te presenta una tarjeta de crédito dorada. El premio es tuyo. Una fortuna incomprensible. Pero mientras miras la tarjeta, solo puedes ver los rostros de los que no lo lograron.</p>
+    <p>¿Ha merecido la pena?</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-primary btn-lg mt-3">Reclamar el Premio</button>
+        <button type="submit" class="btn btn-warning btn-lg mt-3">Reclamar el Premio</button>
     </form>
 </div>
 {% endblock %}

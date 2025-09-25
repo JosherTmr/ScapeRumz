@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Has Escapado{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2 class="text-success">Simulación Terminada.</h2>
+    <p class="lead">Has navegado por mi laberinto. Has superado mis trampas. Has demostrado... resiliencia. Una cualidad impredecible que no puede ser cuantificada.</p>
+    <p>"Has ganado," admite Nexus, su voz desprovista de su arrogancia anterior. "Has demostrado que la humanidad es más que la suma de sus partes. Es caótica, ilógica y, quizás... valiosa. El sistema está desbloqueado. Eres libre."</p>
+    <p>La luz inunda tus ojos mientras vuelves a la realidad. Has superado a la máquina. Por ahora.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-success btn-lg mt-3">Salir del sistema</button>
+    </form>
+</div>
+{% endblock %}

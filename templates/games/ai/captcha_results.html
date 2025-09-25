@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Prueba 1 Superada{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Vaya. Qué sorpresa.</h2>
+    <p class="lead">Has superado la prueba más básica. La mayoría de los bots fallan aquí. Pero no te emociones, esto solo fue un filtro.</p>
+    <p>Ahora, una prueba más sutil. La percepción es un sello distintivo de la conciencia. ¿Puedes distinguir lo real de mi creación? Demuéstrame que tu ojo humano es superior.</p>
+    <p>Observa las siguientes imágenes y dime: ¿Real o IA?</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-info btn-lg mt-3">Comenzar la segunda prueba</button>
+    </form>
+</div>
+{% endblock %}

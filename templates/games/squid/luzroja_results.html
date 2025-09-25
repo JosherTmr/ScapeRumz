@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Resultado: Luz Roja, Luz Verde{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Has sobrevivido... por ahora.</h2>
+    <p class="lead">El sonido de los disparos aún resuena en tus oídos. Muchos cayeron, pero tú lograste cruzar la línea. La euforia de sobrevivir es efímera, reemplazada por el frío pavor de lo que vendrá.</p>
+    <p>Te conducen a una nueva sala. El olor a azúcar quemada flota en el aire. El segundo juego pondrá a prueba tu pulso y tu paciencia.</p>
+    <p>Prepárate para el desafío del Panal.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el segundo juego</button>
+    </form>
+</div>
+{% endblock %}

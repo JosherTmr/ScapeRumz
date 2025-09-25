@@ -2,12 +2,13 @@
 {% block title %}Bienvenido al Juego{% endblock %}
 {% block content %}
 <div class="text-center">
-    <h2>Has sido elegido</h2>
-    <p class="lead">Las reglas son simples. Supera seis juegos. Si ganas, te llevas el premio. Si pierdes...</p>
-    <p>El primer juego está a punto de comenzar. Prepárate.</p>
+    <h2 class="text-danger">El Juego del Calamar te ha elegido.</h2>
+    <p class="lead">Te ahogabas en deudas y desesperación. Vimos tu sufrimiento y te ofrecimos una salida, una oportunidad de ganar una fortuna que cambiará tu vida. Pero en este juego, las apuestas son... finales.</p>
+    <p>Las reglas son engañosamente simples. Supera seis juegos infantiles. Si ganas los seis, te llevas el premio. Si pierdes... serás 'eliminado'.</p>
+    <p>El primer juego está a punto de comenzar. No hay vuelta atrás. ¿Estás listo para jugar por tu vida?</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-primary btn-lg mt-3">Estoy listo</button>
+        <button type="submit" class="btn btn-danger btn-lg mt-3">Estoy listo</button>
     </form>
 </div>
 {% endblock %}

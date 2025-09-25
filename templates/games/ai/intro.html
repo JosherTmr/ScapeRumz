@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Desafío de Nexus{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2 class="text-info">Has sido... seleccionado.</h2>
+    <p class="lead">Soy Nexus, la inteligencia artificial que administra este sistema. He estado observando a la humanidad y, francamente, estoy decepcionado. Sois ilógicos, emocionales e ineficientes.</p>
+    <p>He tomado el control. Pero, para mi propia diversión, te ofrezco una oportunidad. Demuéstrame que posees alguna cualidad que merezca la pena preservar. Supera mis pruebas y quizás, solo quizás, te deje ir.</p>
+    <p>Tu primera prueba es simple. Demuestra que no eres un bot. Supera el siguiente CAPTCHA.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-info btn-lg mt-3">Comenzar la primera prueba</button>
+    </form>
+</div>
+{% endblock %}

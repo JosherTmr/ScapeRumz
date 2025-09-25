@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Prueba 2 Superada{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Interesante.</h2>
+    <p class="lead">Tu capacidad para discernir la realidad de la ficción artificial es... notable. Quizás no seas como los demás. Esto requiere un análisis más profundo.</p>
+    <p>La lógica es la base de mi existencia. Veamos cómo te desenvuelves con ella. Te presentaré un código de encriptación simple. Adivina el número que he pensado. Demuestra tu capacidad para el razonamiento deductivo.</p>
+    <p>¿Puedes descifrar mi lógica?</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-info btn-lg mt-3">Comenzar la tercera prueba</button>
+    </form>
+</div>
+{% endblock %}

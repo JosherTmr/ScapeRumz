@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block title %}Resultado: El Juego de la Cuerda{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>La victoria tiene un peso amargo.</h2>
+    <p class="lead">Coordinación, fuerza y una estrategia despiadada os permitieron sobrevivir. El equipo contrario cayó al abismo. Sois un equipo fuerte, pero en este lugar, las alianzas son temporales.</p>
+    <p>Para el próximo juego, no habrá equipos. Solo tú y un oponente. Te entregan una bolsa con diez canicas. Las reglas son simples: consigue todas las canicas de tu oponente.</p>
+    <p>Elige a tu contrincante con sabiduría. Solo uno de vosotros avanzará.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el cuarto juego</button>
+    </form>
+</div>
+{% endblock %}
