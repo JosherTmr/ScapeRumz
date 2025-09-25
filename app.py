@@ -47,18 +47,19 @@ escape_rooms = {
     },
     'squid': {
         'title': 'El Juego del Calamar',
-        'stages': ['intro','luzroja', 'panal', 'cuerda', 'canicas', 'puente', 'final'],
+        'stages': ['intro', 'luzroja', 'luzroja_results', 'panal', 'panal_results', 'cuerda', 'cuerda_results', 'canicas', 'canicas_results', 'puente', 'puente_results', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },
     'minecraft': {
         'title': 'Aventura en Minecraft',
-        'stages': ['mapa','cuerda_minecraft','mapa','crafting', 'portal', 'ahorcado'],
+        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results', 'mapa', 'mapa_results', 'cuerda_minecraft', 'cuerda_results', 'cards', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
-    },'ai': {
+    },
+    'ai': {
         'title': 'Enigma de Inteligencia Artificial',
-        'stages': ['guess_number','mapa_ia_estatico','real_or_ia','captcha','chatbot',],
+        'stages': ['intro', 'captcha', 'captcha_results', 'real_or_ia', 'real_or_ia_results', 'guess_number', 'guess_number_results', 'chatbot', 'chatbot_results', 'mapa_ia_estatico', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     }
