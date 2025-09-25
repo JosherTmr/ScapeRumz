@@ -1,50 +1,21 @@
 {% extends "layout.html" %}
 
-{% block title %}¡Victoria!{% endblock %}
-
-{% block content %}
-<div id="victory-container" class="text-center">
-    <h1>¡Felicidades!</h1>
-    <h2 class="text-success">Has escapado de "{{ room_title }}"</h2>
-    <p class="lead mt-4">Tu tiempo total fue:</p>
-    <h3>{{ time_taken }}</h3>
-    
-    <a href="{{ url_for('index') }}" class="btn btn-primary mt-4">Jugar de Nuevo</a>
-</div>
+{% block title %}
+¡Has Escapado!
 {% endblock %}
 
-{% block scripts %}
-{% if room_name == 'calamar' %}
-<script>
-    // Animación de billetes cayendo
-    document.addEventListener('DOMContentLoaded', () => {
-        const container = document.getElementById('victory-container');
-        for (let i = 0; i < 50; i++) {
-            const bill = document.createElement('div');
-            bill.innerHTML = '💵';
-            bill.style.position = 'absolute';
-            bill.style.fontSize = `${Math.random() * 20 + 20}px`;
-            bill.style.left = `${Math.random() * 100}vw`;
-            bill.style.top = `${-50 - Math.random() * 100}px`;
-            bill.style.animation = `fall ${Math.random() * 4 + 3}s linear ${Math.random() * 5}s infinite`;
-            container.appendChild(bill);
-        }
-    });
+{% block content %}
+<div class="narrative-container">
+    <h2 class="text-center">¡Victoria!</h2>
+    <p class="lead text-center">Has completado con éxito la sala: <strong>{{ room_title }}</strong>.</p>
+    
+    <div class="text-center mt-4">
+        <p>Tu tiempo final fue:</p>
+        <h3>{{ time_taken }}</h3>
+    </div>
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-        @keyframes fall {
-            to {
-                transform: translateY(120vh) rotate(360deg);
-            }
-        }
-        #victory-container {
-            position: relative;
-            overflow: hidden;
-            height: 80vh;
-        }
-    `;
-    document.head.appendChild(style);
-</script>
-{% endif %}
+    <div class="text-center mt-5">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Jugar de Nuevo</a>
+    </div>
+</div>
 {% endblock %}
