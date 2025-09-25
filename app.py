@@ -142,9 +142,12 @@ def play_stage(room_name, stage_name):
         # --- REFACTORIZACIÓN DE RUTA ---
         # La ruta ahora apunta a la subcarpeta 'games'
         template_path = f'games/{room_name}/{stage_name}.html'
-        # --- MEJORA DE SEGURIDAD: Token de un solo uso para la victoria ---
-        win_token = os.urandom(16).hex()
-        session['win_token'] = win_token
+        # --- CORRECCIÓN DE BUG: Generar token solo si no existe ---
+        # Esto evita que el token se invalide en recargas de página accidentales.
+        if 'win_token' not in session:
+            session['win_token'] = os.urandom(16).hex()
+
+        win_token = session['win_token']
         return render_template(template_path, room_name=room_name, stage_name=stage_name, win_token=win_token)
 
 @app.route('/win/<room_name>/<stage_name>', methods=['POST'])
