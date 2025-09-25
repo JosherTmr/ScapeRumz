@@ -14,37 +14,7 @@ app.secret_key = 'dev_secret_key_12345'
 # --- Base de Datos en Memoria ---
 # Define la estructura y el orden de las salas y sus etapas.
 escape_rooms = {
-    'laboratorio': {
-        'title': 'El Laboratorio Secreto del Dr. Albus',
-        'stages': ['intro', 'acertijo1', 'acertijo2', 'acertijo3'],
-        'template_type': 'puzzle', # Usa la misma plantilla para todas las etapas
-        'data': {
-            'intro': {
-                'title': 'El Comienzo',
-                'question': 'Has despertado en un laboratorio abandonado. La puerta principal está cerrada. En una nota, lees: "Para escapar, debes probar tu intelecto. Di la palabra mágica para comenzar". La palabra es la clave para desbloquear el primer terminal.',
-                'hint': 'La palabra mágica suele ser la que se usa para empezar cualquier aventura en un terminal.',
-                'answer': 'start'
-            },
-            'acertijo1': {
-                'title': 'Acertijo Químico',
-                'question': 'En la pared, ves la fórmula H2O. Un dispositivo te pide que introduzcas el nombre del elemento más ligero de la tabla periódica para desbloquear el siguiente paso.',
-                'hint': 'Su número atómico es 1.',
-                'answer': 'hidrogeno'
-            },
-            'acertijo2': {
-                'title': 'Acertijo Lógico',
-                'question': 'Un monitor muestra: "Tengo ciudades, pero no casas. Tengo montañas, pero no árboles. Tengo agua, pero no peces. ¿Qué soy?"',
-                'hint': 'Es una representación de la Tierra.',
-                'answer': 'un mapa'
-            },
-            'acertijo3': {
-                'title': 'El Código Final',
-                'question': 'La última puerta tiene un teclado numérico. Una nota dice: "El año en que la web fue inventada por Tim Berners-Lee".',
-                'hint': 'Fue a finales del siglo XX.',
-                'answer': '1989'
-            }
-        }
-    },
+    
     'squid': {
         'title': 'El Juego del Calamar',
         'stages': ['intro', 'luzroja', 'luzroja_results', 'panal', 'panal_results', 'cuerda', 'cuerda_results', 'canicas', 'canicas_results', 'puente', 'puente_results', 'final'],
