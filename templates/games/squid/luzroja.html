@@ -192,7 +192,10 @@
         const answerInput = document.getElementById('answer-input');
         const submitAnswerBtn = document.getElementById('submit-answer');
 
-        let gameState = {};
+        let gameState = {
+            win: false,
+            game_over: false
+        };
         let gameInterval;
 
         function renderBoard(map, playerPos) {
@@ -227,8 +230,8 @@
                 questionTimer.style.color = state.question_time_left <= 3 ? 'var(--squid-red)' : 'var(--squid-text)';
             }
 
-            if (gameState.map) {
-                renderBoard(gameState.map, state.player_pos);
+            if (state.map) {
+                renderBoard(state.map, state.player_pos);
             }
         }
 
@@ -240,8 +243,7 @@
         }
 
         async function handleKeydown(e) {
-            // Bloquear movimiento si hay una pregunta o el juego ya ha sido ganado.
-            if (questionModal.style.display === 'flex' || gameState.win) return;
+            if (questionModal.style.display === 'flex' || gameState.win || gameState.game_over) return;
 
             let dx = 0, dy = 0;
             switch(e.key) {
@@ -252,7 +254,6 @@
                 default: return;
             }
 
-            // Una única llamada a la API que el backend se encarga de gestionar.
             const response = await fetch('/api/squid/luzroja/move', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -267,6 +268,11 @@
             } else if (data.status === 'success') {
                 gameState.player_pos = data.new_pos;
                 renderBoard(gameState.map, gameState.player_pos);
+                if (data.win) {
+                    gameState.win = true;
+                    messageElement.textContent = data.message;
+                    submitWin(roomName, stageName, winToken);
+                }
             }
         }
 
@@ -286,29 +292,38 @@
         }
 
         async function pollState() {
-            if (gameState.win) return;
+            if (gameState.win || gameState.game_over) {
+                clearInterval(gameInterval);
+                return;
+            }
+
             const response = await fetch('/api/squid/luzroja/state');
             if (!response.ok) return;
             const state = await response.json();
-            gameState = Object.assign(gameState, state);
+            Object.assign(gameState, state);
 
-            // Si el backend ha eliminado la pregunta (por timeout), pero el modal sigue abierto, ciérralo.
+            if (state.effects && state.effects.length > 0) handleEffects(state.effects);
+            if (state.message) messageElement.textContent = state.message;
+
             if (!state.question_pending && questionModal.style.display === 'flex') {
                 questionModal.style.display = 'none';
                 answerInput.value = '';
             }
 
-            if (state.effects && state.effects.length > 0) handleEffects(state.effects);
-            if (state.message) messageElement.textContent = state.message;
-
             if (state.win) {
+                gameState.win = true;
                 clearInterval(gameInterval);
                 submitWin(roomName, stageName, winToken);
                 return;
             }
             if (state.game_over) {
+                gameState.game_over = true;
                 clearInterval(gameInterval);
-                failGame(state.message || "¡Juego terminado!", roomName);
+                if (state.effects && state.effects.includes('shake')) {
+                    setTimeout(() => failGame(state.message || "¡Juego terminado!", roomName), 500);
+                } else {
+                    failGame(state.message || "¡Juego terminado!", roomName);
+                }
                 return;
             }
 
@@ -320,8 +335,8 @@
             const response = await fetch('/api/squid/luzroja/start', { method: 'POST' });
             const data = await response.json();
 
-            gameState = data;
-            renderBoard(data.map, data.player_pos);
+            Object.assign(gameState, data);
+            renderBoard(gameState.map, gameState.player_pos);
 
             if (gameInterval) clearInterval(gameInterval);
             gameInterval = setInterval(pollState, 500);
