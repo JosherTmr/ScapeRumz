@@ -666,7 +666,11 @@ def move_luz_roja_player():
         game['game_over'] = True
         game['win'] = False
         session['luzroja_game'] = game
-        return jsonify({'status': 'game_over', 'message': '¡Se acabó el tiempo!'})
+        return jsonify({
+            'status': 'game_over',
+            'message': '¡Se acabó el tiempo!',
+            'effects': ['shake']
+        })
 
     # Penalización si se mueve en luz roja
     if not game.get('goal_reached', False) and game['light_state'] == 'red':
@@ -746,7 +750,8 @@ def answer_luz_roja_question():
     return jsonify({
         'status': 'answered',
         'message': message,
-        'player_pos': game['player_pos']
+        'player_pos': game['player_pos'],
+        'effects': game.get('effects', [])
     })
 
 # --- Juego 1 (AI): ¿Real o IA? ---

@@ -57,18 +57,20 @@ function initLuzRojaGame(roomName, stageName, winToken) {
             const seconds = gameState.time_left % 60;
             timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         } else {
-            endGame(false, "¡Se acabó el tiempo!");
+            // BUG FIX: Se pasa el efecto 'shake' para que la animación se active.
+            endGame(false, "¡Se acabó el tiempo!", ['shake']);
         }
     }
 
-    function handleEffects(effects) {
+    function handleEffects(effects = []) {
         if (effects.includes('shake')) {
             gameContainer.classList.add('shake-animation');
             setTimeout(() => gameContainer.classList.remove('shake-animation'), 500);
         }
     }
 
-    function endGame(isWin, message) {
+    // REFACTOR: La función ahora acepta un array de efectos para centralizar la lógica.
+    function endGame(isWin, message, effects = []) {
         if (gameState.game_over) return;
         gameState.game_over = true;
         gameState.win = isWin;
@@ -78,15 +80,14 @@ function initLuzRojaGame(roomName, stageName, winToken) {
         clearInterval(questionTimerInterval);
 
         messageElement.textContent = message;
+        handleEffects(effects);
 
         if (isWin) {
             submitWin(roomName, stageName, winToken);
         } else {
-            if (gameContainer.classList.contains('shake-animation')) {
-                setTimeout(() => failGame(message, roomName), 500);
-            } else {
-                failGame(message, roomName);
-            }
+            // Se espera 500ms si la animación de shake está activa para que sea visible.
+            const delay = effects.includes('shake') ? 500 : 0;
+            setTimeout(() => failGame(message, roomName), delay);
         }
     }
 
@@ -130,8 +131,8 @@ function initLuzRojaGame(roomName, stageName, winToken) {
         const data = await response.json();
 
         if (data.status === 'game_over') {
-            handleEffects(['shake']);
-            endGame(false, data.message);
+            // BUG FIX: Se pasa el array de efectos a endGame para centralizar la lógica.
+            endGame(false, data.message, data.effects);
         } else if (data.status === 'ask_question') {
             showQuestion(data.question);
         } else if (data.status === 'success') {
@@ -164,12 +165,10 @@ function initLuzRojaGame(roomName, stageName, winToken) {
             }
             if (qTime <= 0) {
                 clearInterval(questionTimerInterval);
-                hideQuestion("¡Tiempo agotado! Vuelves al inicio.");
-                gameState.player_pos = {x: 7, y: 24};
-                renderBoard(gameState.map, gameState.player_pos);
-                handleEffects(['shake']);
-                lightStateTimeout = setTimeout(requestNextLightState, 1000);
-                masterTimerInterval = setInterval(updateMasterTimer, 1000);
+                // Al expirar el tiempo, se llama a submitAnswer. El servidor se encargará
+                // de la lógica de timeout, reseteando la posición del jugador y
+                // asegurando que el estado del juego esté sincronizado.
+                submitAnswer();
             }
         }, 1000);
     }
