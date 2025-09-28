@@ -603,22 +603,28 @@ LUZ_ROJA_NUEVO_CONFIG = {
 @app.route('/api/squid/luzroja/start', methods=['POST'])
 def start_luz_roja_nuevo():
     start_pos = LUZ_ROJA_NUEVO_CONFIG['start_pos']
+    time_now = time.time()
+    # --- REFACTOR: El cliente ahora controlará el temporizador con esta duración inicial ---
+    initial_duration = random.uniform(3, 6)
+
     session['luzroja_game'] = {
         'player_pos': start_pos,
-        'start_time': time.time(),
-        'light_state': 'green', # green, red
-        'next_change': time.time() + random.uniform(3, 6),
+        'start_time': time_now,
+        'light_state': 'green',
+        'next_change': time_now + initial_duration,
         'question_pending': None,
         'game_over': False,
         'win': False,
-        'goal_reached': False # Nuevo estado
+        'goal_reached': False
     }
     session.modified = True
+
     return jsonify({
         'map': LUZ_ROJA_NUEVO_CONFIG['map'],
         'player_pos': start_pos,
         'time_left': LUZ_ROJA_NUEVO_CONFIG['time_limit'],
-        'light_state': 'green'
+        'light_state': 'green',
+        'duration': int(initial_duration * 1000) # Enviar duración en ms
     })
 
 
@@ -628,55 +634,23 @@ def get_luz_roja_state_nuevo():
     if not game or game.get('game_over'):
         return jsonify(game if game else {'error': 'Game not started'}), 400
 
-    time_now = time.time()
-    game['effects'] = [] # Reset effects on each poll
+    # --- REFACTOR: Lógica de cambio de estado controlada por eventos ---
+    # El cliente llama a esta ruta cuando su temporizador termina, por lo que el estado DEBE cambiar.
+    if game['light_state'] == 'green':
+        new_state = 'red'
+        duration = random.uniform(2, 5)
+    else: # Es 'red'
+        new_state = 'green'
+        duration = random.uniform(3, 6)
 
-    # Si ya se ha alcanzado la meta, se congela el tiempo y el semáforo
-    if not game.get('goal_reached', False):
-        # Check global timer
-        time_left = (game['start_time'] + LUZ_ROJA_NUEVO_CONFIG['time_limit']) - time_now
-        if time_left <= 0:
-            game['game_over'] = True
-            game['win'] = False
-            game['message'] = "¡Se acabó el tiempo!"
-            game['effects'].append('shake')
-            session['luzroja_game'] = game
-            return jsonify(game)
-        game['time_left'] = round(time_left)
-
-        # Check question timer
-        if game.get('question_pending'):
-            q_start_time = game['question_pending']['start_time']
-            q_time_left = 10 - (time_now - q_start_time)
-            if q_time_left <= 0:
-                game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
-                game['question_pending'] = None
-                game['message'] = "Tardaste en responder, vuelves al inicio"
-                game['effects'].append('shake')
-            game['question_time_left'] = max(0, q_time_left) if game.get('question_pending') else None
-        else:
-            game['question_time_left'] = None
-
-
-        # Update light state
-        if time_now > game['next_change']:
-            if game['light_state'] == 'green':
-                game['light_state'] = 'red'
-                game['next_change'] = time_now + random.uniform(2, 5)
-            else: # red
-                game['light_state'] = 'green'
-                game['next_change'] = time_now + random.uniform(3, 6)
-
+    game['light_state'] = new_state
+    game['next_change'] = time.time() + duration
     session['luzroja_game'] = game
+
+    # Devuelve solo lo necesario: el nuevo estado y cuánto durará.
     return jsonify({
-        'player_pos': game['player_pos'],
-        'light_state': game['light_state'],
-        'time_left': game.get('time_left', LUZ_ROJA_NUEVO_CONFIG['time_limit']),
-        'question_pending': game.get('question_pending'),
-        'question_time_left': round(game['question_time_left']) if game.get('question_time_left') is not None else None,
-        'win': game.get('win', False),
-        'effects': game.get('effects', []),
-        'goal_reached': game.get('goal_reached', False)
+        'light_state': new_state,
+        'duration': int(duration * 1000) # en ms
     })
 
 @app.route('/api/squid/luzroja/move', methods=['POST'])
@@ -685,7 +659,16 @@ def move_luz_roja_player():
     if not game or game.get('game_over') or game.get('question_pending'):
         return jsonify({'error': 'Cannot move now'}), 400
 
-    # Solo penalizar por luz roja si la meta no ha sido alcanzada
+    # --- REFACTOR: La comprobación autoritativa del tiempo se hace en cada movimiento ---
+    time_now = time.time()
+    time_left = (game['start_time'] + LUZ_ROJA_NUEVO_CONFIG['time_limit']) - time_now
+    if time_left <= 0 and not game.get('goal_reached', False):
+        game['game_over'] = True
+        game['win'] = False
+        session['luzroja_game'] = game
+        return jsonify({'status': 'game_over', 'message': '¡Se acabó el tiempo!'})
+
+    # Penalización si se mueve en luz roja
     if not game.get('goal_reached', False) and game['light_state'] == 'red':
         question_data = random.choice(LUZ_ROJA_NUEVO_CONFIG['questions'])
         game['question_pending'] = {

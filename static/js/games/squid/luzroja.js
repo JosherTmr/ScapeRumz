@@ -1,117 +1,234 @@
-/**
- * Juego 1: Luz Roja, Luz Verde (Refactorizado)
- */
 function initLuzRojaGame(roomName, stageName, winToken) {
-    const trafficLight = document.getElementById('traffic-light');
-    const runButton = document.getElementById('run-button');
-    const progressBar = document.getElementById('progress-bar');
-    const progressDisplay = document.getElementById('progress-display');
-    const timerDisplay = document.getElementById('timer-display');
-    const gameMessage = document.getElementById('game-message');
+    const gameContainer = document.querySelector('.game-container');
+    const boardElement = document.getElementById('game-board');
+    const timerElement = document.getElementById('timer');
+    const lightStatusElement = document.getElementById('light-status');
+    const messageElement = document.getElementById('game-message');
+    const questionModal = document.getElementById('question-modal');
+    const questionText = document.getElementById('question-text');
+    const questionTimerElement = document.getElementById('question-timer');
+    const answerInput = document.getElementById('answer-input');
+    const submitAnswerBtn = document.getElementById('submit-answer');
 
-    let gameActive = false;
-    let pollerInterval;
+    let gameState = {
+        player_pos: null,
+        map: null,
+        light_state: 'green',
+        time_left: 0,
+        game_over: false,
+        win: false
+    };
 
-    // Función para actualizar la UI
-    function updateUI(data) {
-        // Actualizar semáforo
-        const lightColors = { green: '#28a745', yellow: '#ffc107', red: '#dc3545' };
-        trafficLight.style.backgroundColor = lightColors[data.light_state] || '#343a40';
-        trafficLight.style.boxShadow = `0 0 25px ${lightColors[data.light_state] || '#343a40'}`;
+    let lightStateTimeout;
+    let masterTimerInterval;
+    let questionTimerInterval;
 
-        // Actualizar tiempo y progreso
-        timerDisplay.textContent = `Tiempo: ${data.time_left || 0}s`;
-        const percentage = Math.min(data.progress || 0, 100);
-        progressBar.style.width = `${percentage}%`;
-        progressDisplay.textContent = `${percentage}%`;
+    function renderBoard(map, playerPos) {
+        if (!map || !playerPos) return;
+        boardElement.innerHTML = '';
+        const rows = map.length;
+        const cols = map[0].length;
+        boardElement.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const tile = document.createElement('div');
+                tile.className = `tile tile-${map[y][x]}`;
+                if (playerPos.x === x && playerPos.y === y) {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'player';
+                    tile.appendChild(playerDiv);
+                }
+                boardElement.appendChild(tile);
+            }
+        }
     }
 
-    // Poller que consulta el estado del juego al servidor
-    async function pollGameState() {
-        if (!gameActive) return;
+    function updateLightUI(lightState) {
+        gameState.light_state = lightState;
+        lightStatusElement.className = `light-status ${lightState === 'green' ? 'light-green' : 'light-red'}`;
+        lightStatusElement.textContent = lightState === 'green' ? 'LUZ VERDE' : 'LUZ ROJA';
+    }
+
+    function updateMasterTimer() {
+        if (gameState.time_left > 0) {
+            gameState.time_left--;
+            const minutes = Math.floor(gameState.time_left / 60);
+            const seconds = gameState.time_left % 60;
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            endGame(false, "¡Se acabó el tiempo!");
+        }
+    }
+
+    function handleEffects(effects) {
+        if (effects.includes('shake')) {
+            gameContainer.classList.add('shake-animation');
+            setTimeout(() => gameContainer.classList.remove('shake-animation'), 500);
+        }
+    }
+
+    function endGame(isWin, message) {
+        if (gameState.game_over) return;
+        gameState.game_over = true;
+        gameState.win = isWin;
+
+        clearTimeout(lightStateTimeout);
+        clearInterval(masterTimerInterval);
+        clearInterval(questionTimerInterval);
+
+        messageElement.textContent = message;
+
+        if (isWin) {
+            submitWin(roomName, stageName, winToken);
+        } else {
+            if (gameContainer.classList.contains('shake-animation')) {
+                setTimeout(() => failGame(message, roomName), 500);
+            } else {
+                failGame(message, roomName);
+            }
+        }
+    }
+
+    async function requestNextLightState() {
+        if (gameState.game_over) return;
 
         try {
             const response = await fetch('/api/squid/luzroja/state');
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
-            if (data.error) {
-                endGame(false, data.error);
+            if (data.error || gameState.game_over) {
                 return;
             }
 
-            updateUI(data);
+            updateLightUI(data.light_state);
+            lightStateTimeout = setTimeout(requestNextLightState, data.duration);
 
-            if (data.game_over) {
-                endGame(data.win, data.message);
-            }
         } catch (error) {
-            console.error("Error polling game state:", error);
-            gameMessage.textContent = "Error de conexión. Reintentando...";
+            console.error("Error fetching new light state:", error);
         }
     }
 
-    // Evento del botón para correr
-    runButton.addEventListener('click', async () => {
-        if (!gameActive) return;
+    async function handleKeydown(e) {
+        if (questionModal.style.display === 'flex' || gameState.game_over) return;
 
-        try {
-            const response = await fetch('/api/squid/luzroja/run', { method: 'POST' });
-            const data = await response.json();
-
-            if (data.new_progress) {
-                updateUI({ progress: data.new_progress, light_state: 'green', time_left: parseInt(timerDisplay.textContent.split(' ')[1]) });
-            }
-
-            if (data.game_over) {
-                endGame(data.win, data.message);
-            } else if (data.message) {
-                // Muestra mensajes como "¡Sigue corriendo!"
-                // gameMessage.textContent = data.message;
-            }
-        } catch (error) {
-            console.error("Error during run:", error);
-            gameMessage.textContent = "Error de conexión.";
+        let dx = 0, dy = 0;
+        switch(e.key) {
+            case 'ArrowUp': dy = -1; break;
+            case 'ArrowDown': dy = 1; break;
+            case 'ArrowLeft': dx = -1; break;
+            case 'ArrowRight': dx = 1; break;
+            default: return;
         }
-    });
 
-    // Función para finalizar el juego
-    function endGame(isWin, message) {
-        if (!gameActive) return;
-        gameActive = false;
-        clearInterval(pollerInterval);
-        runButton.disabled = true;
-        gameMessage.textContent = message;
-
-        if (isWin) {
-            gameMessage.className = 'text-success';
-            updateUI({ progress: 100, light_state: 'green' });
-            setTimeout(() => submitWin(roomName, stageName, winToken), 1500);
-        } else {
-            gameMessage.className = 'text-danger';
-            failGame(message, roomName);
-        }
-    }
-
-    // Iniciar el juego
-    async function startGame() {
-        runButton.disabled = true;
-        const response = await fetch('/api/squid/luzroja/start', { method: 'POST' });
-        if (!response.ok) {
-            gameMessage.textContent = "No se pudo iniciar el juego.";
-            return;
-        }
+        const response = await fetch('/api/squid/luzroja/move', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ dx, dy })
+        });
         const data = await response.json();
 
-        gameActive = true;
-        runButton.disabled = false;
-        updateUI({ progress: data.progress, light_state: data.lightState, time_left: data.timeLeft });
+        if (data.status === 'game_over') {
+            handleEffects(['shake']);
+            endGame(false, data.message);
+        } else if (data.status === 'ask_question') {
+            showQuestion(data.question);
+        } else if (data.status === 'success') {
+            gameState.player_pos = data.new_pos;
+            renderBoard(gameState.map, gameState.player_pos);
+            if (data.message) messageElement.textContent = data.message;
+            if (data.win) {
+                endGame(true, "¡Has escapado!");
+            }
+        }
+    }
 
-        // Inicia el poller para actualizar el estado del juego
-        pollerInterval = setInterval(pollGameState, 100); // Consulta cada 100ms
+    function showQuestion(question) {
+        clearTimeout(lightStateTimeout);
+        clearInterval(masterTimerInterval);
+
+        questionText.textContent = question;
+        questionModal.style.display = 'flex';
+        answerInput.focus();
+
+        let qTime = 10;
+        questionTimerElement.textContent = qTime;
+        questionTimerElement.style.color = 'var(--squid-text)';
+
+        questionTimerInterval = setInterval(() => {
+            qTime--;
+            questionTimerElement.textContent = qTime;
+            if (qTime <= 3) {
+                questionTimerElement.style.color = 'var(--squid-red)';
+            }
+            if (qTime <= 0) {
+                clearInterval(questionTimerInterval);
+                hideQuestion("¡Tiempo agotado! Vuelves al inicio.");
+                gameState.player_pos = {x: 7, y: 24};
+                renderBoard(gameState.map, gameState.player_pos);
+                handleEffects(['shake']);
+                lightStateTimeout = setTimeout(requestNextLightState, 1000);
+                masterTimerInterval = setInterval(updateMasterTimer, 1000);
+            }
+        }, 1000);
+    }
+
+    function hideQuestion(message) {
+        clearInterval(questionTimerInterval);
+        questionModal.style.display = 'none';
+        answerInput.value = '';
+        messageElement.textContent = message;
+    }
+
+    async function submitAnswer() {
+        const answer = answerInput.value;
+        clearInterval(questionTimerInterval);
+
+        const response = await fetch('/api/squid/luzroja/answer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ answer })
+        });
+        const data = await response.json();
+
+        hideQuestion(data.message);
+        gameState.player_pos = data.player_pos;
+        renderBoard(gameState.map, gameState.player_pos);
+        if (data.effects) handleEffects(data.effects);
+
+        lightStateTimeout = setTimeout(requestNextLightState, 1000);
+        masterTimerInterval = setInterval(updateMasterTimer, 1000);
+    }
+
+    async function startGame() {
+        messageElement.textContent = "Iniciando nueva partida...";
+        const response = await fetch('/api/squid/luzroja/start', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.error) {
+            endGame(false, data.error);
+            return;
+        }
+
+        Object.assign(gameState, data);
+        renderBoard(gameState.map, gameState.player_pos);
+        updateLightUI(data.light_state);
+
+        masterTimerInterval = setInterval(updateMasterTimer, 1000);
+        lightStateTimeout = setTimeout(requestNextLightState, data.duration);
+
+        document.addEventListener('keydown', handleKeydown);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        answerInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') submitAnswer();
+        });
+        messageElement.textContent = "Usa las flechas para moverte.";
     }
 
     startGame();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    initLuzRojaGame(room_name, stage_name, win_token);
+});
