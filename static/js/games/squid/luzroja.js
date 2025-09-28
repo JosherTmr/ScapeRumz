@@ -147,7 +147,8 @@ function initLuzRojaGame(roomName, stageName, winToken) {
 
     function showQuestion(question) {
         clearTimeout(lightStateTimeout);
-        clearInterval(masterTimerInterval);
+        // BUG FIX: No se detiene el temporizador principal. El tiempo debe seguir corriendo.
+        // clearInterval(masterTimerInterval);
 
         questionText.textContent = question;
         questionModal.style.display = 'flex';
@@ -197,7 +198,8 @@ function initLuzRojaGame(roomName, stageName, winToken) {
         if (data.effects) handleEffects(data.effects);
 
         lightStateTimeout = setTimeout(requestNextLightState, 1000);
-        masterTimerInterval = setInterval(updateMasterTimer, 1000);
+        // BUG FIX: El temporizador principal ya no se detiene, por lo que no es necesario reiniciarlo.
+        // masterTimerInterval = setInterval(updateMasterTimer, 1000);
     }
 
     async function startGame() {
