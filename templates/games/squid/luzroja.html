@@ -1,35 +1,295 @@
 {% extends "layout.html" %}
-{% block title %}Luz Roja, Luz Verde{% endblock %}
-{% block content %}
-<div class="text-center">
-    <h2>Juego 1: Luz Roja, Luz Verde</h2>
-    <p>Haz clic repetidamente en "Correr" solo cuando la luz esté en verde. ¡Cuidado con la luz amarilla! Tienes 20 segundos para llegar a la meta.</p>
-    
-    <!-- El semáforo con una animación de pulso para la luz amarilla -->
-    <div id="traffic-light" class="mx-auto my-4" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; transition: background-color 0.2s, box-shadow 0.2s;"></div>
-    
-    <!-- Nuevo: Contenedor para el temporizador y mensajes -->
-    <div id="game-info" class="my-3" style="min-height: 50px;">
-        <h3 id="timer-display" class="text-white">Tiempo: 30s</h3>
-        <h3 id="game-message" class="text-warning"></h3>
-    </div>
 
-    <button id="run-button" class="btn btn-lg btn-success px-5 py-3">Correr</button>
+{% block title %}Luz Roja, Luz Verde{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .game-container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+    #game-board {
+        display: grid;
+        border: 2px solid #555;
+        background-color: #2b2b2b;
+    }
+    .tile {
+        width: 25px;
+        height: 25px;
+        box-sizing: border-box;
+    }
+    .tile-1 { background-color: #4a4a4a; } /* Muro */
+    .tile-0 { background-color: #333; } /* Piso */
+    .tile-2 { background-color: #4caf50; } /* Meta */
+    .tile-3 { background-color: #f44336; } /* Salida */
+    .tile-4 { background-color: #333; } /* Punto de inicio */
+    .tile-5 { background-color: #ffeb3b; } /* Muñeca */
     
-    <!-- Barra de progreso para un look más moderno -->
-    <div class="progress mt-4 mx-auto" style="height: 30px; max-width: 500px; background-color: #333;">
-        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-            <span id="progress-display" class="font-weight-bold">0%</span>
-        </div>
+    .player {
+        background-color: #2196F3;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        margin: 2.5px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .game-info {
+        width: 250px;
+        padding: 20px;
+        background-color: #2b2b2b;
+        border: 2px solid #555;
+        text-align: center;
+    }
+    #timer {
+        font-size: 2em;
+        margin-bottom: 20px;
+    }
+    #light-status {
+        padding: 20px;
+        font-size: 1.5em;
+        text-transform: uppercase;
+        font-weight: bold;
+        transition: background-color 0.5s;
+    }
+    .light-green { background-color: #4caf50; color: #111; }
+    .light-red { background-color: #f44336; color: #fff; }
+
+    #question-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background-color: #333;
+        padding: 40px;
+        border: 2px solid #888;
+        text-align: center;
+        width: 80%;
+        max-width: 600px;
+    }
+    #question-text { font-size: 1.5em; margin-bottom: 20px; }
+    #answer-input {
+        padding: 10px;
+        width: 80%;
+        margin-bottom: 20px;
+        background-color: #555;
+        border: 1px solid #777;
+        color: #fff;
+    }
+    #submit-answer {
+        padding: 10px 20px;
+        background-color: #2196F3;
+        border: none;
+        color: white;
+        cursor: pointer;
+    }
+    #game-message {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="game-container">
+    <div id="game-board"></div>
+    <div class="game-info">
+        <h2>Luz Roja, Luz Verde</h2>
+        <div id="timer">--:--</div>
+        <div id="light-status">Cargando...</div>
+        <div id="game-message">Usa las flechas para moverte.</div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/squid/luzroja.js') }}"></script>
+<div id="question-modal">
+    <div class="modal-content">
+        <h2 id="question-text">Pregunta</h2>
+        <input type="text" id="answer-input" placeholder="Escribe tu respuesta aquí...">
+        <button id="submit-answer">Enviar</button>
+    </div>
+</div>
+
 <script>
-    // Asegúrate de llamar a la función correcta para este juego
-    initLuzRojaGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
+document.addEventListener('DOMContentLoaded', () => {
+    const boardElement = document.getElementById('game-board');
+    const timerElement = document.getElementById('timer');
+    const lightStatusElement = document.getElementById('light-status');
+    const messageElement = document.getElementById('game-message');
+    const questionModal = document.getElementById('question-modal');
+    const questionText = document.getElementById('question-text');
+    const answerInput = document.getElementById('answer-input');
+    const submitAnswerBtn = document.getElementById('submit-answer');
+
+    let gameState = {};
+    let gameInterval;
+
+    function renderBoard(map, playerPos) {
+        boardElement.innerHTML = '';
+        const rows = map.length;
+        const cols = map[0].length;
+        boardElement.style.gridTemplateColumns = `repeat(${cols}, 25px)`;
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                const tile = document.createElement('div');
+                tile.className = `tile tile-${map[y][x]}`;
+                if (playerPos.x === x && playerPos.y === y) {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = 'player';
+                    tile.appendChild(playerDiv);
+                }
+                boardElement.appendChild(tile);
+            }
+        }
+    }
+
+    function updateUI(state) {
+        // Timer
+        const minutes = Math.floor(state.time_left / 60);
+        const seconds = state.time_left % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Light Status
+        lightStatusElement.textContent = state.light_state === 'green' ? 'LUZ VERDE' : 'LUZ ROJA';
+        lightStatusElement.className = state.light_state === 'green' ? 'light-green' : 'light-red';
+
+        // Player Position
+        if (gameState.map) {
+            renderBoard(gameState.map, state.player_pos);
+        }
+    }
+
+    async function handleKeydown(e) {
+        if (questionModal.style.display === 'flex' || gameState.win) return;
+
+        let dx = 0, dy = 0;
+        switch(e.key) {
+            case 'ArrowUp': dy = -1; break;
+            case 'ArrowDown': dy = 1; break;
+            case 'ArrowLeft': dx = -1; break;
+            case 'ArrowRight': dx = 1; break;
+            default: return;
+        }
+
+        const response = await fetch('/api/squid/luzroja/move', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ dx, dy })
+        });
+        const data = await response.json();
+
+        if (data.status === 'ask_question') {
+            questionText.textContent = data.question;
+            questionModal.style.display = 'flex';
+            answerInput.focus();
+        } else if (data.status === 'success') {
+            gameState.player_pos = data.new_pos;
+            renderBoard(gameState.map, gameState.player_pos);
+            if (data.win) {
+                handleWin();
+            }
+        }
+    }
+
+    async function submitAnswer() {
+        const answer = answerInput.value;
+        const response = await fetch('/api/squid/luzroja/answer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ answer })
+        });
+        const data = await response.json();
+
+        messageElement.textContent = data.message;
+        gameState.player_pos = data.player_pos;
+        renderBoard(gameState.map, gameState.player_pos);
+
+        questionModal.style.display = 'none';
+        answerInput.value = '';
+    }
+
+    function handleWin() {
+        clearInterval(gameInterval);
+        messageElement.textContent = "¡VICTORIA! Has llegado a la meta.";
+        const winForm = document.createElement('form');
+        winForm.method = 'POST';
+        winForm.action = `/win/{{ room_name }}/{{ stage_name }}`;
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'token';
+        tokenInput.value = '{{ win_token }}';
+        winForm.appendChild(tokenInput);
+        document.body.appendChild(winForm);
+        winForm.submit();
+    }
+
+    function handleGameOver(message) {
+        clearInterval(gameInterval);
+        messageElement.textContent = message;
+        setTimeout(() => {
+            messageElement.textContent = "El juego se reiniciará en 5 segundos...";
+            setTimeout(() => startGame(), 5000);
+        }, 2000);
+    }
+
+    async function pollState() {
+        const response = await fetch('/api/squid/luzroja/state');
+        const state = await response.json();
+
+        if (state.game_over) {
+            handleGameOver(state.message || "¡Juego terminado!");
+            return;
+        }
+
+        if (state.win) {
+            handleWin();
+            return;
+        }
+
+        gameState.player_pos = state.player_pos;
+        gameState.light_state = state.light_state;
+        gameState.time_left = state.time_left;
+        updateUI(state);
+    }
+
+    async function startGame() {
+        messageElement.textContent = "Iniciando nueva partida...";
+        const response = await fetch('/api/squid/luzroja/start', { method: 'POST' });
+        const data = await response.json();
+
+        gameState = data;
+        renderBoard(data.map, data.player_pos);
+
+        if (gameInterval) clearInterval(gameInterval);
+        gameInterval = setInterval(pollState, 1000);
+
+        document.addEventListener('keydown', handleKeydown);
+        submitAnswerBtn.addEventListener('click', submitAnswer);
+        answerInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') submitAnswer();
+        });
+
+        messageElement.textContent = "Usa las flechas para moverte.";
+    }
+
+    startGame();
+});
 </script>
 {% endblock %}

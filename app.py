@@ -553,87 +553,165 @@ def check_guess_number():
             'message': 'Código maestro detectado… acceso concedido. Reinicio en curso.',
             'attempts_left': session['attempts_left']
         })
-# --- Juego 1 (Squid): Luz Roja, Luz Verde ---
-LUZ_ROJA_CONFIG = {
-    'duration': 30,
-    'progress_needed': 100,
-    'progress_per_run': 4
+# --- Juego 1 (Squid): Luz Roja, Luz Verde (Nuevo) ---
+LUZ_ROJA_NUEVO_CONFIG = {
+    'map': [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,3,5,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,1,1,1,1,1,1,1,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,1,1,1,1,1,1,1,1,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,1,1,1,1,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,1,1,1,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
+        [1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,4,0,0,0,0,0,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    'start_pos': {'x': 7, 'y': 24},
+    'time_limit': 180,
+    'questions': [
+        {"question": "¿Capital de Francia?", "answer": "paris"},
+        {"question": "¿Formula química del agua?", "answer": "h2o"},
+        {"question": "¿En qué año llegó el hombre a la luna?", "answer": "1969"}
+    ]
 }
 
 @app.route('/api/squid/luzroja/start', methods=['POST'])
-def start_luz_roja():
+def start_luz_roja_nuevo():
+    start_pos = LUZ_ROJA_NUEVO_CONFIG['start_pos']
     session['luzroja_game'] = {
-        'progress': 0,
+        'player_pos': start_pos,
         'start_time': time.time(),
-        'light_state': 'green',
-        'next_change': time.time() + (random.random() * 2 + 1.5) # Initial green light duration
+        'light_state': 'green', # green, red
+        'next_change': time.time() + random.uniform(3, 6),
+        'question_pending': None,
+        'game_over': False,
+        'win': False
     }
     session.modified = True
     return jsonify({
-        'timeLeft': LUZ_ROJA_CONFIG['duration'],
-        'lightState': 'green',
-        'progress': 0
+        'map': LUZ_ROJA_NUEVO_CONFIG['map'],
+        'player_pos': start_pos,
+        'time_left': LUZ_ROJA_NUEVO_CONFIG['time_limit'],
+        'light_state': 'green'
     })
 
 @app.route('/api/squid/luzroja/state', methods=['GET'])
-def get_luz_roja_state():
+def get_luz_roja_state_nuevo():
     game = session.get('luzroja_game')
-    if not game:
-        return jsonify({'error': 'Game not started'}), 400
+    if not game or game.get('game_over'):
+        return jsonify(game if game else {'error': 'Game not started'}), 400
 
     time_now = time.time()
-    time_left = (game['start_time'] + LUZ_ROJA_CONFIG['duration']) - time_now
+    time_left = (game['start_time'] + LUZ_ROJA_NUEVO_CONFIG['time_limit']) - time_now
 
     if time_left <= 0:
-        return jsonify({'game_over': True, 'win': False, 'message': '¡Se acabó el tiempo!', 'light_state': 'red', 'time_left': 0})
+        game['game_over'] = True
+        game['win'] = False
+        game['message'] = "¡Se acabó el tiempo!"
+        session['luzroja_game'] = game
+        return jsonify(game)
 
-    # Update light state based on time
     if time_now > game['next_change']:
-        current_light = game.get('light_state', 'green')
-        if current_light == 'green':
-            game['light_state'] = 'yellow'
-            game['next_change'] = time_now + 0.75  # Yellow light is quick
-        elif current_light == 'yellow':
+        if game['light_state'] == 'green':
             game['light_state'] = 'red'
-            game['next_change'] = time_now + (random.random() * 1.5 + 1)  # Red light duration
-        elif current_light == 'red':
+            game['next_change'] = time_now + random.uniform(2, 5)
+        else: # red
             game['light_state'] = 'green'
-            game['next_change'] = time_now + (random.random() * 2 + 1.5) # Green light duration
+            game['next_change'] = time_now + random.uniform(3, 6)
         session.modified = True
 
     return jsonify({
+        'player_pos': game['player_pos'],
         'light_state': game['light_state'],
         'time_left': round(time_left),
-        'progress': game['progress'],
-        'game_over': False
+        'question_pending': game.get('question_pending'),
+        'win': game.get('win', False)
     })
 
-
-@app.route('/api/squid/luzroja/run', methods=['POST'])
-def run_luz_roja():
+@app.route('/api/squid/luzroja/move', methods=['POST'])
+def move_luz_roja_player():
     game = session.get('luzroja_game')
-    if not game:
-        return jsonify({'error': 'Game not started'}), 400
+    if not game or game.get('game_over') or game.get('question_pending'):
+        return jsonify({'error': 'Cannot move now'}), 400
 
-    # Check if the player ran during a red or yellow light
-    # This state is updated by the /state endpoint, so it's the most recent state
-    if game.get('light_state') != 'green':
-        return jsonify({'game_over': True, 'win': False, 'message': '¡Te moviste con la luz incorrecta!'})
+    if game['light_state'] == 'red':
+        question = random.choice(LUZ_ROJA_NUEVO_CONFIG['questions'])
+        game['question_pending'] = question
+        session['luzroja_game'] = game
+        return jsonify({
+            'status': 'ask_question',
+            'question': question['question']
+        })
 
-    # If the light is green, increase progress
-    game['progress'] += LUZ_ROJA_CONFIG['progress_per_run']
+    data = request.json
+    dx, dy = data.get('dx', 0), data.get('dy', 0)
 
-    win = game['progress'] >= LUZ_ROJA_CONFIG['progress_needed']
-    game_over = win
+    player_pos = game['player_pos']
+    new_pos = {'x': player_pos['x'] + dx, 'y': player_pos['y'] + dy}
+
+    # Check boundaries and walls
+    game_map = LUZ_ROJA_NUEVO_CONFIG['map']
+    if not (0 <= new_pos['y'] < len(game_map) and 0 <= new_pos['x'] < len(game_map[0])):
+        return jsonify({'status': 'invalid_move', 'message': 'Out of bounds'})
+
+    tile = game_map[new_pos['y']][new_pos['x']]
+    if tile == 1: # Wall
+        return jsonify({'status': 'invalid_move', 'message': 'Cannot move into a wall'})
+
+    game['player_pos'] = new_pos
+
+    if tile == 2: # Goal
+        game['win'] = True
+        game['game_over'] = True
+        game['message'] = "¡Has llegado a la meta!"
 
     session['luzroja_game'] = game
-    session.modified = True
+    return jsonify({
+        'status': 'success',
+        'new_pos': new_pos,
+        'win': game.get('win', False)
+    })
+
+@app.route('/api/squid/luzroja/answer', methods=['POST'])
+def answer_luz_roja_question():
+    game = session.get('luzroja_game')
+    if not game or not game.get('question_pending'):
+        return jsonify({'error': 'No question to answer'}), 400
+
+    data = request.json
+    answer = data.get('answer', '').lower().strip()
+    correct_answer = game['question_pending']['answer'].lower().strip()
+
+    if answer == correct_answer:
+        message = "¡Correcto! Puedes seguir."
+    else:
+        game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
+        message = "¡Incorrecto! Vuelves al inicio."
+
+    game['question_pending'] = None
+    session['luzroja_game'] = game
 
     return jsonify({
-        'new_progress': game['progress'],
-        'game_over': game_over,
-        'win': win,
-        'message': '¡Sigue corriendo!' if not win else '¡Has llegado a la meta!'
+        'status': 'answered',
+        'message': message,
+        'player_pos': game['player_pos']
     })
 
 # --- Juego 1 (AI): ¿Real o IA? ---
