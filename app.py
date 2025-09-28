@@ -650,9 +650,9 @@ def get_luz_roja_state_nuevo():
             if q_time_left <= 0:
                 game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
                 game['question_pending'] = None
-                game['message'] = "¡Tiempo agotado para responder! Vuelves al inicio."
+                game['message'] = "Tardaste en responder, vuelves al inicio"
                 game['effects'].append('shake')
-            game['question_time_left'] = max(0, q_time_left)
+            game['question_time_left'] = max(0, q_time_left) if game.get('question_pending') else None
         else:
             game['question_time_left'] = None
 
