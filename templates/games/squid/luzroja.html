@@ -5,18 +5,18 @@
 {% block content %}
 <style>
     :root {
-        --squid-red: #dc3545;
-        --squid-green: #198754;
-        --squid-pink: #ffc0cb;
-        --squid-dark-gray: #343a40;
-        --squid-light-gray: #f8f9fa;
-        --squid-border-gray: #dee2e6;
+        --squid-red: #e84393; /* Un rosa más intenso, casi fucsia */
+        --squid-green-mint: #00b894;
+        --squid-dark-bg: #1e272e;
+        --squid-panel-bg: #2d3436;
+        --squid-floor: #485460;
+        --squid-text: #d2dae2;
     }
 
     body {
-        background-color: var(--squid-light-gray);
-        color: var(--squid-dark-gray);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: var(--squid-dark-bg);
+        color: var(--squid-text);
+        font-family: 'Source Code Pro', 'Courier New', Courier, monospace;
     }
     .game-container {
         display: flex;
@@ -27,42 +27,45 @@
     }
     #game-board {
         display: grid;
-        border: 2px solid var(--squid-border-gray);
-        background-color: #fff;
+        border: 2px solid var(--squid-red);
+        background-color: var(--squid-panel-bg);
+        padding: 5px;
     }
     .tile {
         width: 25px;
         height: 25px;
         box-sizing: border-box;
     }
-    /* 1 = muro: zonas intransitables. */
-    .tile-1 { background-color: var(--squid-dark-gray); }
-    /* 0 = piso libre: camino transitable. */
-    .tile-0 { background-color: #fff; border: 1px dotted var(--squid-border-gray); }
-    /* 2 = meta: casillas de llegada (al tocarlas se gana la partida). */
-    .tile-2 { background-color: var(--squid-pink); }
-    /* 3 = salida: indicador de área de partida (no obligatorio en reglas). */
-    .tile-3 { background-color: var(--squid-pink); opacity: 0.6; }
-    /* 4 = punto de inicio: posición inicial de los jugadores. */
-    .tile-4 { background-color: #fff; border: 1px dotted var(--squid-border-gray); }
-    /* 5 = muñeca: personaje que controla el semáforo (rojo/verde). */
-    .tile-5 { background-color: var(--squid-red); }
+    .tile-1 { background-color: var(--squid-red); box-shadow: 0 0 8px var(--squid-red); }
+    .tile-0, .tile-4 { background-color: var(--squid-floor); }
+    .tile-2 { background-color: var(--squid-red); filter: brightness(1.5); }
+    .tile-3 { background-color: var(--squid-red); opacity: 0.6; }
+    .tile-5 {
+        background-color: #fff;
+        border-radius: 50%;
+        animation: pulse-doll 2s infinite;
+    }
+     @keyframes pulse-doll {
+        0% { box-shadow: 0 0 5px #fff; }
+        50% { box-shadow: 0 0 20px #fff, 0 0 30px var(--squid-red); }
+        100% { box-shadow: 0 0 5px #fff; }
+    }
     
     .player {
-        background-color: var(--squid-green); /* Verde como el chándal */
+        background-color: var(--squid-green-mint);
         border-radius: 50%;
         width: 20px;
         height: 20px;
         margin: 2.5px;
         transition: all 0.2s ease-in-out;
-        box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        box-shadow: 0 0 8px var(--squid-green-mint);
     }
 
     .game-info {
         width: 250px;
         padding: 20px;
-        background-color: #fff;
-        border: 2px solid var(--squid-border-gray);
+        background-color: var(--squid-panel-bg);
+        border: 2px solid var(--squid-red);
         border-radius: 0.25rem;
         text-align: center;
     }
@@ -70,51 +73,52 @@
         font-size: 2.5em;
         font-weight: bold;
         margin-bottom: 20px;
-        font-family: 'Courier New', Courier, monospace;
+        color: var(--squid-red);
     }
     #light-status {
         padding: 20px;
         font-size: 1.5em;
         text-transform: uppercase;
         font-weight: bold;
-        transition: background-color 0.5s;
+        transition: background-color 0.5s, box-shadow 0.5s;
         border-radius: 0.25rem;
         color: #fff;
     }
-    .light-green { background-color: var(--squid-green); }
-    .light-red { background-color: var(--squid-red); }
+    .light-green { background-color: var(--squid-green-mint); box-shadow: 0 0 15px var(--squid-green-mint); }
+    .light-red { background-color: var(--squid-red); box-shadow: 0 0 15px var(--squid-red); }
 
     #question-modal {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.7);
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.85);
         justify-content: center;
         align-items: center;
         z-index: 1000;
     }
     .modal-content {
-        background-color: #fff;
-        color: var(--squid-dark-gray);
+        background-color: var(--squid-panel-bg);
+        color: var(--squid-text);
         padding: 40px;
         border: 5px solid var(--squid-red);
         border-radius: 1rem;
         text-align: center;
         width: 80%;
         max-width: 600px;
+        box-shadow: 0 0 30px var(--squid-red);
     }
-    #question-text { font-size: 1.5em; margin-bottom: 20px; }
+    #question-text { font-size: 1.5em; margin-bottom: 20px; color: var(--squid-red); }
     #answer-input {
         display: block;
         width: 100%;
         padding: 0.75rem;
         font-size: 1rem;
         margin-bottom: 20px;
-        border: 1px solid var(--squid-border-gray);
+        border: 1px solid var(--squid-red);
         border-radius: 0.25rem;
+        background-color: var(--squid-dark-bg);
+        color: var(--squid-text);
     }
     #submit-answer {
         padding: 10px 20px;
@@ -129,7 +133,7 @@
     #game-message {
         margin-top: 20px;
         font-weight: bold;
-        color: var(--squid-red);
+        color: var(--squid-green-mint);
         min-height: 24px;
     }
 </style>
