@@ -292,6 +292,12 @@
             const state = await response.json();
             gameState = Object.assign(gameState, state);
 
+            // Si el backend ha eliminado la pregunta (por timeout), pero el modal sigue abierto, ciérralo.
+            if (!state.question_pending && questionModal.style.display === 'flex') {
+                questionModal.style.display = 'none';
+                answerInput.value = '';
+            }
+
             if (state.effects && state.effects.length > 0) handleEffects(state.effects);
             if (state.message) messageElement.textContent = state.message;
 
