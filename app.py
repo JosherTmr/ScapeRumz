@@ -584,20 +584,19 @@ LUZ_ROJA_NUEVO_CONFIG = {
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     'start_pos': {'x': 7, 'y': 24},
-    'time_limit': 60,
+    'time_limit': 180,
     'questions': [
-        {"question": "Si un cubo tiene un volumen de 27 cm³, ¿cuánto mide cada arista?", "answer": "3"},
-        {"question": "¿Cuál es el número primo inmediatamente anterior a 100?", "answer": "97"},
-        {"question": "¿En qué año cayó el Imperio Romano de Occidente?", "answer": "476"},
-        {"question": "¿Cuál es el logaritmo en base 10 de 1000?", "answer": "3"},
-        {"question": "¿Qué científico descubrió los rayos X?", "answer": "wilhelm roentgen"},
-        {"question": "¿Qué número sigue en la secuencia 1, 1, 2, 3, 5, 8, 13, ...?", "answer": "21"},
-        {"question": "¿Quién escribió 'La crítica de la razón pura'?", "answer": "immanuel kant"},
-        {"question": "¿Cuál es el país con mayor número de husos horarios?", "answer": "francia"},
-        {"question": "¿Cuál es el metal líquido a temperatura ambiente?", "answer": "mercurio"},
-        {"question": "¿Cuál es la derivada de sen(x)?", "answer": "cos(x)"}
-]
-
+        {"question": "¿Cuál es el océano más grande del mundo?", "answer": "pacifico"},
+        {"question": "¿Cuántos lados tiene un hexágono?", "answer": "6"},
+        {"question": "¿Quién escribió 'Cien años de soledad'?", "answer": "gabriel garcia marquez"},
+        {"question": "¿Cuál es el símbolo químico del oro?", "answer": "au"},
+        {"question": "¿En qué país se encuentran las pirámides de Giza?", "answer": "egipto"},
+        {"question": "¿Cuál es el río más largo del mundo?", "answer": "amazonas"},
+        {"question": "¿Quién pintó la Mona Lisa?", "answer": "leonardo da vinci"},
+        {"question": "¿En qué año cayó el Muro de Berlín?", "answer": "1989"},
+        {"question": "¿Cuál es el planeta más grande del sistema solar?", "answer": "jupiter"},
+        {"question": "¿Quién fue el primer presidente de los Estados Unidos?", "answer": "george washington"}
+    ]
 }
 
 @app.route('/api/squid/luzroja/start', methods=['POST'])
@@ -610,7 +609,8 @@ def start_luz_roja_nuevo():
         'next_change': time.time() + random.uniform(3, 6),
         'question_pending': None,
         'game_over': False,
-        'win': False
+        'win': False,
+        'goal_reached': False # Nuevo estado
     }
     session.modified = True
     return jsonify({
@@ -620,6 +620,7 @@ def start_luz_roja_nuevo():
         'light_state': 'green'
     })
 
+
 @app.route('/api/squid/luzroja/state', methods=['GET'])
 def get_luz_roja_state_nuevo():
     game = session.get('luzroja_game')
@@ -627,30 +628,54 @@ def get_luz_roja_state_nuevo():
         return jsonify(game if game else {'error': 'Game not started'}), 400
 
     time_now = time.time()
-    time_left = (game['start_time'] + LUZ_ROJA_NUEVO_CONFIG['time_limit']) - time_now
+    game['effects'] = [] # Reset effects on each poll
 
-    if time_left <= 0:
-        game['game_over'] = True
-        game['win'] = False
-        game['message'] = "¡Se acabó el tiempo!"
-        session['luzroja_game'] = game
-        return jsonify(game)
+    # Si ya se ha alcanzado la meta, se congela el tiempo y el semáforo
+    if not game.get('goal_reached', False):
+        # Check global timer
+        time_left = (game['start_time'] + LUZ_ROJA_NUEVO_CONFIG['time_limit']) - time_now
+        if time_left <= 0:
+            game['game_over'] = True
+            game['win'] = False
+            game['message'] = "¡Se acabó el tiempo!"
+            game['effects'].append('shake')
+            session['luzroja_game'] = game
+            return jsonify(game)
+        game['time_left'] = round(time_left)
 
-    if time_now > game['next_change']:
-        if game['light_state'] == 'green':
-            game['light_state'] = 'red'
-            game['next_change'] = time_now + random.uniform(2, 5)
-        else: # red
-            game['light_state'] = 'green'
-            game['next_change'] = time_now + random.uniform(3, 6)
-        session.modified = True
+        # Check question timer
+        if game.get('question_pending'):
+            q_start_time = game['question_pending']['start_time']
+            q_time_left = 10 - (time_now - q_start_time)
+            if q_time_left <= 0:
+                game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
+                game['question_pending'] = None
+                game['message'] = "¡Tiempo agotado para responder! Vuelves al inicio."
+                game['effects'].append('shake')
+            game['question_time_left'] = max(0, q_time_left)
+        else:
+            game['question_time_left'] = None
 
+
+        # Update light state
+        if time_now > game['next_change']:
+            if game['light_state'] == 'green':
+                game['light_state'] = 'red'
+                game['next_change'] = time_now + random.uniform(2, 5)
+            else: # red
+                game['light_state'] = 'green'
+                game['next_change'] = time_now + random.uniform(3, 6)
+
+    session['luzroja_game'] = game
     return jsonify({
         'player_pos': game['player_pos'],
         'light_state': game['light_state'],
-        'time_left': round(time_left),
+        'time_left': game.get('time_left', LUZ_ROJA_NUEVO_CONFIG['time_limit']),
         'question_pending': game.get('question_pending'),
-        'win': game.get('win', False)
+        'question_time_left': round(game['question_time_left']) if game.get('question_time_left') is not None else None,
+        'win': game.get('win', False),
+        'effects': game.get('effects', []),
+        'goal_reached': game.get('goal_reached', False)
     })
 
 @app.route('/api/squid/luzroja/move', methods=['POST'])
@@ -659,13 +684,18 @@ def move_luz_roja_player():
     if not game or game.get('game_over') or game.get('question_pending'):
         return jsonify({'error': 'Cannot move now'}), 400
 
-    if game['light_state'] == 'red':
-        question = random.choice(LUZ_ROJA_NUEVO_CONFIG['questions'])
-        game['question_pending'] = question
+    # Solo penalizar por luz roja si la meta no ha sido alcanzada
+    if not game.get('goal_reached', False) and game['light_state'] == 'red':
+        question_data = random.choice(LUZ_ROJA_NUEVO_CONFIG['questions'])
+        game['question_pending'] = {
+            "question": question_data["question"],
+            "answer": question_data["answer"],
+            "start_time": time.time()
+        }
         session['luzroja_game'] = game
         return jsonify({
             'status': 'ask_question',
-            'question': question['question']
+            'question': question_data['question']
         })
 
     data = request.json
@@ -685,10 +715,13 @@ def move_luz_roja_player():
 
     game['player_pos'] = new_pos
 
-    if tile == 2: # Goal
+    if tile == 2 and not game.get('goal_reached'): # Meta
+        game['goal_reached'] = True
+        game['message'] = "¡Meta alcanzada! Ahora ve a la salida (casilla roja)."
+    elif tile == 3 and game.get('goal_reached'): # Salida
         game['win'] = True
         game['game_over'] = True
-        game['message'] = "¡Has llegado a la meta!"
+        game['message'] = "¡Has escapado!"
 
     session['luzroja_game'] = game
     return jsonify({
@@ -703,15 +736,25 @@ def answer_luz_roja_question():
     if not game or not game.get('question_pending'):
         return jsonify({'error': 'No question to answer'}), 400
 
-    data = request.json
-    answer = data.get('answer', '').lower().strip()
-    correct_answer = game['question_pending']['answer'].lower().strip()
-
-    if answer == correct_answer:
-        message = "¡Correcto! Puedes seguir."
-    else:
+    # Check for timeout before processing the answer
+    q_start_time = game['question_pending'].get('start_time', 0)
+    if time.time() - q_start_time > 10:
+        # This is a fallback, the main timeout is handled in /state
         game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
-        message = "¡Incorrecto! Vuelves al inicio."
+        message = "¡Tiempo agotado! Vuelves al inicio."
+        game['effects'] = ['shake']
+    else:
+        data = request.json
+        answer = data.get('answer', '').lower().strip()
+        correct_answer = game['question_pending']['answer'].lower().strip()
+
+        if answer == correct_answer:
+            message = "¡Correcto! Puedes seguir."
+            game['effects'] = []
+        else:
+            game['player_pos'] = LUZ_ROJA_NUEVO_CONFIG['start_pos']
+            message = "¡Incorrecto! Vuelves al inicio."
+            game['effects'] = ['shake']
 
     game['question_pending'] = None
     session['luzroja_game'] = game
