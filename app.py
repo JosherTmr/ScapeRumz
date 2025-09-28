@@ -23,13 +23,13 @@ escape_rooms = {
     },
     'minecraft': {
         'title': 'Aventura en Minecraft',
-        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results', 'mapa', 'mapa_results', 'cuerda_minecraft', 'cuerda_results', 'cards', 'final'],
+        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results', 'mapa', 'mapa_results', 'cuerda_minecraft', 'cuerda_results', 'cards','mapa', 'mapa_results' 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },
     'ai': {
         'title': 'Enigma de Inteligencia Artificial',
-        'stages': ['intro', 'captcha', 'captcha_results', 'real_or_ia', 'real_or_ia_results', 'guess_number', 'guess_number_results', 'chatbot', 'chatbot_results', 'mapa_ia_estatico', 'final'],
+        'stages': ['intro', 'real_or_ia', 'real_or_ia_results', 'guess_number', 'guess_number_results', 'chatbot', 'chatbot_results', 'mapa_ia_estatico', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     }
