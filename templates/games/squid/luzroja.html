@@ -230,8 +230,8 @@
                 questionTimer.style.color = state.question_time_left <= 3 ? 'var(--squid-red)' : 'var(--squid-text)';
             }
 
-            if (state.map) {
-                renderBoard(state.map, state.player_pos);
+            if (gameState.map) {
+                renderBoard(gameState.map, state.player_pos);
             }
         }
 
