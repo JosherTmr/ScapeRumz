@@ -584,12 +584,20 @@ LUZ_ROJA_NUEVO_CONFIG = {
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     'start_pos': {'x': 7, 'y': 24},
-    'time_limit': 180,
+    'time_limit': 60,
     'questions': [
-        {"question": "¿Capital de Francia?", "answer": "paris"},
-        {"question": "¿Formula química del agua?", "answer": "h2o"},
-        {"question": "¿En qué año llegó el hombre a la luna?", "answer": "1969"}
-    ]
+        {"question": "Si un cubo tiene un volumen de 27 cm³, ¿cuánto mide cada arista?", "answer": "3"},
+        {"question": "¿Cuál es el número primo inmediatamente anterior a 100?", "answer": "97"},
+        {"question": "¿En qué año cayó el Imperio Romano de Occidente?", "answer": "476"},
+        {"question": "¿Cuál es el logaritmo en base 10 de 1000?", "answer": "3"},
+        {"question": "¿Qué científico descubrió los rayos X?", "answer": "wilhelm roentgen"},
+        {"question": "¿Qué número sigue en la secuencia 1, 1, 2, 3, 5, 8, 13, ...?", "answer": "21"},
+        {"question": "¿Quién escribió 'La crítica de la razón pura'?", "answer": "immanuel kant"},
+        {"question": "¿Cuál es el país con mayor número de husos horarios?", "answer": "francia"},
+        {"question": "¿Cuál es el metal líquido a temperatura ambiente?", "answer": "mercurio"},
+        {"question": "¿Cuál es la derivada de sen(x)?", "answer": "cos(x)"}
+]
+
 }
 
 @app.route('/api/squid/luzroja/start', methods=['POST'])
