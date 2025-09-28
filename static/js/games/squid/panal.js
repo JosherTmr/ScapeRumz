@@ -1,152 +1,231 @@
 /**
- * Juego 2: Panal de Azúcar
+ * Juego 2: Panal de Azúcar (Versión Colaborativa)
+ * El equipo resuelve pistas para decirle al "conductor" qué segmento trazar.
  */
 function initPanalGame(roomName, stageName, winToken) {
-    const quizContainer = document.getElementById('quiz-container');
-    const questionCounter = document.getElementById('question-counter');
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const quizFeedback = document.getElementById('quiz-feedback');
-    const canvasContainer = document.getElementById('canvas-container');
-    const sequenceDisplay = document.getElementById('sequence-display');
+    // Referencias al DOM
     const canvas = document.getElementById('panal-canvas');
-    const feedback = document.getElementById('feedback');
     const ctx = canvas.getContext('2d');
-    const points = [{x: 200, y: 50}, {x: 350, y: 150}, {x: 300, y: 350}, {x: 100, y: 350}, {x: 50, y: 150}];
-    const totalQuestions = 5;
-    let usedQuizIndexes = new Set();
-    let currentQuestionIndex = 0;
-    let correctSequence = [];
-    let vertexNumbers = [];
-    let nextPointToTrace = 0;
-    const quizData = [
-        { question: "¿Cuál es la capital de Francia?", options: ["París", "Londres", "Berlín", "Madrid"], answer: "París" },
-        { question: "¿Cuál es el planeta más grande de nuestro sistema solar?", options: ["Marte", "Saturno", "Júpiter", "Neptuno"], answer: "Júpiter" },
-        { question: "¿Cuál es la montaña más alta del mundo?", options: ["Monte Everest", "K2", "Kangchenjunga", "Makalu"], answer: "Monte Everest" },
-        { question: "¿Cuál es el océano más grande de la Tierra?", options: ["Océano Pacífico", "Océano Índico", "Océano Atlántico", "Océano Ártico"], answer: "Océano Pacífico" },
-        { question: "¿Quién pintó la Mona Lisa?", options: ["Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Miguel Ángel"], answer: "Leonardo da Vinci" },
-        { question: "¿Qué planeta es conocido como el Planeta Rojo?", options: ["Marte", "Venus", "Mercurio", "Urano"], answer: "Marte" },
-        { question: "¿Cuál es la capital de Japón?", options: ["Tokio", "Kioto", "Osaka", "Nagoya"], answer: "Tokio" },
-        { question: "¿Quién escribió 'Romeo y Julieta'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "León Tolstói"], answer: "William Shakespeare" },
-        { question: "¿En qué continente se encuentra el Desierto del Sahara?", options: ["Asia", "África", "Australia", "Europa"], answer: "África" },
-        { question: "¿Cuántos lados tiene un hexágono?", options: ["Cinco", "Seis", "Siete", "Ocho"], answer: "Seis" }
-    ];
+    const timerEl = document.getElementById('timer');
+    const livesContainer = document.getElementById('lives-container');
+    const puzzleCounterEl = document.getElementById('puzzle-counter');
+    const puzzleTextEl = document.getElementById('puzzle-text');
+    const feedbackEl = document.getElementById('feedback');
 
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
+    // Estado del juego
+    let gameState = {
+        config: null,
+        lives: 0,
+        tracedSegments: [],
+        gameOver: false,
+    };
+    let timerInterval;
 
-    function loadQuestion() {
-        if (currentQuestionIndex >= totalQuestions) {
-            startTracingPhase();
-            return;
-        }
-        questionCounter.textContent = `Pregunta ${currentQuestionIndex + 1} de ${totalQuestions}`;
-        let questionIndex;
-        do {
-            questionIndex = Math.floor(Math.random() * quizData.length);
-        } while (usedQuizIndexes.has(questionIndex));
-        usedQuizIndexes.add(questionIndex);
-        const currentQuiz = quizData[questionIndex];
-        questionText.textContent = currentQuiz.question;
-        optionsContainer.innerHTML = '';
-        let availableNumbers = [1, 2, 3, 4];
-        shuffleArray(availableNumbers);
-        const correctAnswerNumber = availableNumbers.pop();
-        correctSequence.push(correctAnswerNumber);
-        const optionsWithNumbers = [{ text: currentQuiz.answer, number: correctAnswerNumber }];
-        const wrongOptions = currentQuiz.options.filter(opt => opt !== currentQuiz.answer);
-        shuffleArray(wrongOptions);
-        for(let i=0; i<3; i++){
-            optionsWithNumbers.push({ text: wrongOptions[i], number: availableNumbers[i] });
-        }
-        shuffleArray(optionsWithNumbers);
-        optionsWithNumbers.forEach(opt => {
-            const button = document.createElement('button');
-            button.className = 'list-group-item list-group-item-action list-group-item-primary';
-            button.textContent = `${opt.number}. ${opt.text}`;
-            button.onclick = () => checkAnswer(opt.text === currentQuiz.answer, opt.number);
-            optionsContainer.appendChild(button);
-        });
-    }
+    // --- LÓGICA DE DIBUJO ---
 
-    function checkAnswer(isCorrect, number) {
-        if (isCorrect) {
-            quizFeedback.textContent = `¡Correcto! El número es ${number}.`;
-            quizFeedback.className = 'text-success';
-            currentQuestionIndex++;
-            setTimeout(loadQuestion, 1500);
-        } else {
-            quizFeedback.textContent = '¡Incorrecto! El panal se ha roto.';
-            quizFeedback.className = 'text-danger';
-            failGame('Respuesta incorrecta en el quiz del panal.', roomName);
-        }
-    }
+    function draw() {
+        if (!gameState.config) return;
 
-    function startTracingPhase() {
-        quizContainer.style.display = 'none';
-        canvasContainer.style.display = 'block';
-        sequenceDisplay.textContent = correctSequence.join(' - ');
-        vertexNumbers = [...correctSequence];
-        shuffleArray(vertexNumbers);
-        drawShape();
-    }
-
-    function drawShape() {
+        const { vertices, segments } = gameState.config;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = '#6f1d1b';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.closePath();
-        ctx.stroke();
-        points.forEach((p, index) => {
-            const correctIndexOfThisVertex = correctSequence.indexOf(vertexNumbers[index]);
-            const isTraced = correctIndexOfThisVertex < nextPointToTrace;
-            ctx.fillStyle = isTraced ? '#28a745' : '#495057';
+
+        // Dibuja los segmentos
+        segments.forEach(seg => {
+            const start = vertices[seg.start].pos;
+            const end = vertices[seg.end].pos;
+            const isTraced = gameState.tracedSegments.includes(seg.id);
+
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+            ctx.moveTo(start[0], start[1]);
+            ctx.lineTo(end[0], end[1]);
+            ctx.strokeStyle = isTraced ? '#6f1d1b' : '#d4a373';
+            ctx.lineWidth = isTraced ? 6 : 4;
+            ctx.stroke();
+        });
+
+        // Dibuja los vértices y números
+        Object.values(vertices).forEach(vertex => {
+            ctx.beginPath();
+            ctx.arc(vertex.pos[0], vertex.pos[1], 15, 0, 2 * Math.PI);
+            ctx.fillStyle = '#e6b8a2';
             ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.font = '20px Arial';
+
+            ctx.fillStyle = '#6f1d1b';
+            ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(vertexNumbers[index], p.x, p.y);
+            ctx.fillText(vertex.num, vertex.pos[0], vertex.pos[1]);
         });
+
+        // Dibuja las grietas
+        drawCracks();
     }
 
-    canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        points.forEach((p, index) => {
-            const distance = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-            if (distance < 25) {
-                const clickedNumber = vertexNumbers[index];
-                const expectedNumber = correctSequence[nextPointToTrace];
-                if (clickedNumber === expectedNumber) {
-                    nextPointToTrace++;
-                    feedback.textContent = '¡Bien!';
-                    feedback.className = 'text-success';
-                    drawShape();
-                    if (nextPointToTrace === points.length) {
-                        feedback.textContent = '¡Forma extraída con éxito!';
-                    setTimeout(() => submitWin(roomName, stageName, winToken), 1000);
-                    }
-                } else {
-                    feedback.textContent = '¡Secuencia incorrecta! El panal se rompió.';
-                    feedback.className = 'text-danger';
-                failGame('Secuencia incorrecta en el panal.', roomName);
+    function drawCracks() {
+        const cracksToDraw = gameState.config.lives - gameState.lives;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.lineWidth = 2;
+
+        const crackPatterns = [
+            () => { ctx.moveTo(50, 50); ctx.lineTo(150, 150); ctx.lineTo(120, 180); },
+            () => { ctx.moveTo(450, 80); ctx.lineTo(350, 180); ctx.lineTo(380, 200); },
+            () => { ctx.moveTo(100, 400); ctx.lineTo(200, 300); ctx.lineTo(180, 280); }
+        ];
+
+        for (let i = 0; i < cracksToDraw; i++) {
+            ctx.beginPath();
+            if(crackPatterns[i]) crackPatterns[i]();
+            ctx.stroke();
+        }
+    }
+
+    // --- LÓGICA DEL JUEGO ---
+
+    async function startGame() {
+        try {
+            const response = await fetch(`/api/squid/panal/start`, { method: 'POST' });
+            if (!response.ok) throw new Error('Failed to start game');
+
+            const data = await response.json();
+            gameState.config = data.config;
+            gameState.lives = data.config.lives;
+            gameState.tracedSegments = [];
+
+            updateUI(data.puzzle, gameState.lives);
+            startTimer(data.config.time_limit);
+            draw();
+
+        } catch (error) {
+            console.error("Error starting game:", error);
+            feedbackEl.textContent = "Error al cargar. Intenta recargar la página.";
+        }
+    }
+
+    function startTimer(duration) {
+        let timeLeft = duration;
+        timerEl.textContent = timeLeft;
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                if (!gameState.gameOver) {
+                    gameState.gameOver = true;
+                    failGame("¡Se acabó el tiempo! El panal se ha roto.", roomName);
                 }
             }
+        }, 1000);
+    }
+
+    function updateUI(puzzleData, lives) {
+        // Actualizar contador de pistas
+        const puzzleNumber = gameState.tracedSegments.length + 1;
+        puzzleCounterEl.textContent = `Pista ${puzzleNumber} de ${gameState.config.segments.length}`;
+        puzzleTextEl.textContent = puzzleData.clue;
+
+        // Actualizar vidas
+        livesContainer.innerHTML = '';
+        for (let i = 0; i < gameState.config.lives; i++) {
+            const img = document.createElement('img');
+            img.src = "https://placehold.co/100x100/fca311/6f1d1b?text=OK"; // Placeholder icon
+            img.alt = "Vida";
+            img.className = 'crack-icon ' + (i < lives ? 'active' : '');
+            livesContainer.appendChild(img);
+        }
+
+        draw();
+    }
+
+    // --- MANEJO DE INTERACCIÓN ---
+
+    function getClickedSegment(clickX, clickY) {
+        const { segments, vertices } = gameState.config;
+        let clickedSegment = null;
+        let minDistance = 20; // Margen de click en píxeles
+
+        segments.forEach(seg => {
+            // No se puede clickear un segmento ya trazado
+            if (gameState.tracedSegments.includes(seg.id)) return;
+
+            const p1 = vertices[seg.start].pos;
+            const p2 = vertices[seg.end].pos;
+
+            const dist = distToSegment({ x: clickX, y: clickY }, { x: p1[0], y: p1[1] }, { x: p2[0], y: p2[1] });
+
+            if (dist < minDistance) {
+                minDistance = dist;
+                clickedSegment = seg;
+            }
         });
+        return clickedSegment;
+    }
+
+    canvas.addEventListener('click', async (event) => {
+        if (gameState.gameOver || !gameState.config) return;
+
+        const rect = canvas.getBoundingClientRect();
+        // Ajustar coordenadas al tamaño real del canvas
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
+
+        const segment = getClickedSegment(x, y);
+
+        if (segment) {
+            feedbackEl.textContent = 'Verificando...';
+            try {
+                const response = await fetch(`/api/squid/panal/check`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ segment_id: segment.id })
+                });
+                const result = await response.json();
+
+                gameState.lives = result.new_lives;
+
+                if (result.correct) {
+                    feedbackEl.textContent = '¡Correcto! Siguiente pista...';
+                    feedbackEl.className = 'text-success';
+                    gameState.tracedSegments.push(segment.id);
+                } else {
+                    feedbackEl.textContent = '¡Incorrecto! El panal se agrieta...';
+                    feedbackEl.className = 'text-danger';
+                }
+
+                if (result.game_over) {
+                    gameState.gameOver = true;
+                    clearInterval(timerInterval);
+                    setTimeout(() => {
+                        if (result.win) {
+                            submitWin(roomName, stageName, winToken);
+                        } else {
+                            failGame("El panal se ha roto por completo.", roomName);
+                        }
+                    }, 1500);
+                } else {
+                    updateUI(result.next_puzzle, result.new_lives);
+                }
+
+            } catch (error) {
+                console.error("Error checking segment:", error);
+                feedbackEl.textContent = 'Error de conexión.';
+            }
+        }
     });
 
-    loadQuestion();
+    // --- FUNCIÓN AUXILIAR DE GEOMETRÍA ---
+    // Calcula la distancia mínima desde un punto a un segmento de línea.
+    function distToSegment(p, v, w) {
+        const l2 = (v.x - w.x)**2 + (v.y - w.y)**2;
+        if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+        let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        const projection = { x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y) };
+        return Math.hypot(p.x - projection.x, p.y - projection.y);
+    }
+
+    // Iniciar el juego
+    startGame();
 }

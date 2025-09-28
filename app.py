@@ -168,6 +168,152 @@ import random
 
 # --- LÓGICA DE JUEGO MOVIDA AL BACKEND ---
 
+# --- INICIO: FRAGMENTO PARA EL JUEGO DEL PANAL ---
+# Puedes agregar este bloque de código en cualquier parte de tu app.py
+# siempre que esté fuera de otras funciones.
+
+# --- Juego 2 (Squid): Panal de Azúcar (Versión Colaborativa) ---
+DALGONA_CONFIG = {
+    'shape_name': 'estrella',
+    'time_limit': 120, # 2 minutos para resolver todo
+    'lives': 3,
+    'vertices': { # Vértices numerados para los acertijos
+        'p1': {'pos': (250, 80),  'num': 7},
+        'p2': {'pos': (320, 150), 'num': 2},
+        'p3': {'pos': (400, 160), 'num': 11},
+        'p4': {'pos': (340, 240), 'num': 6},
+        'p5': {'pos': (360, 320), 'num': 10},
+        'p6': {'pos': (250, 280), 'num': 5},
+        'p7': {'pos': (140, 320), 'num': 9},
+        'p8': {'pos': (160, 240), 'num': 4},
+        'p9': {'pos': (100, 160), 'num': 13},
+        'p10':{'pos': (180, 150), 'num': 3},
+    },
+    'segments': [ # Define los segmentos y su identificador
+        {'id': 's1', 'start': 'p1', 'end': 'p2'},
+        {'id': 's2', 'start': 'p2', 'end': 'p3'},
+        {'id': 's3', 'start': 'p3', 'end': 'p4'},
+        {'id': 's4', 'start': 'p4', 'end': 'p5'},
+        {'id': 's5', 'start': 'p5', 'end': 'p6'},
+        {'id': 's6', 'start': 'p6', 'end': 'p7'},
+        {'id': 's7', 'start': 'p7', 'end': 'p8'},
+        {'id': 's8', 'start': 'p8', 'end': 'p9'},
+        {'id': 's9', 'start': 'p9', 'end': 'p10'},
+        {'id': 's10','start': 'p10','end': 'p1'},
+    ],
+    'puzzles': [ # Los acertijos y el ID del segmento correcto
+        {
+            "clue": "Para empezar, encuentra el único trazo que une dos números primos.",
+            "answer": "s10" # El trazo entre el vértice 3 y el 7
+        },
+        {
+            "clue": "El siguiente segmento es el único que conecta con un número de dos cifras.",
+            "answer": "s2" # El trazo entre el 2 y el 11
+        },
+        {
+            "clue": "Busca el segmento horizontal que se encuentre a mayor altura.",
+            "answer": "s3" # El trazo entre 11 y 6
+        },
+        {
+            "clue": "Desde el último punto, sigue el camino que lleva al único número de dos dígitos restante.",
+            "answer": "s4" # El trazo entre 6 y 10
+        },
+        {
+            "clue": "El siguiente trazo te llevará al número que es el resultado de 2+3.",
+            "answer": "s5" # El trazo entre 10 y 5
+        },
+        {
+            "clue": "Continúa por la línea que conecta con el resultado de 3x3.",
+            "answer": "s6" # El trazo entre 5 y 9
+        },
+        {
+            "clue": "Avanza por el camino que apunta al único vértice cuyo número es un cuadrado perfecto.",
+            "answer": "s7" # El trazo entre 9 y 4
+        },
+        {
+            "clue": "Elige el segmento que te dirige al número primo más alto de la figura.",
+            "answer": "s8" # El trazo entre 4 y 13
+        },
+        {
+            "clue": "Desde el último punto, dirígete al número más bajo de todos.",
+            "answer": "s1" # El trazo entre 13 -> 3, pero la conexión es 13 -> 2
+        },
+        {
+            "clue": "Solo queda un camino para cerrar la figura. ¡Hazlo con cuidado!",
+            "answer": "s9" # El trazo restante
+        }
+    ]
+}
+
+@app.route('/api/squid/panal/start', methods=['POST'])
+def start_panal_game():
+    """Inicializa el estado del juego del panal en la sesión."""
+    session['panal_game'] = {
+        'lives': DALGONA_CONFIG['lives'],
+        'start_time': time.time(),
+        'current_puzzle_index': 0,
+        'traced_segments': []
+    }
+    session.modified = True
+
+    # Devuelve la configuración inicial que el frontend necesita
+    return jsonify({
+        'config': {
+            'time_limit': DALGONA_CONFIG['time_limit'],
+            'lives': DALGONA_CONFIG['lives'],
+            'vertices': DALGONA_CONFIG['vertices'],
+            'segments': DALGONA_CONFIG['segments']
+        },
+        'puzzle': DALGONA_CONFIG['puzzles'][0]
+    })
+
+@app.route('/api/squid/panal/check', methods=['POST'])
+def check_panal_segment():
+    """Verifica si el segmento clickeado por el usuario es el correcto."""
+    game = session.get('panal_game')
+    if not game:
+        return jsonify({'error': 'El juego no ha sido iniciado.'}), 400
+
+    data = request.json
+    clicked_segment_id = data.get('segment_id')
+
+    current_puzzle_index = game['current_puzzle_index']
+    correct_answer = DALGONA_CONFIG['puzzles'][current_puzzle_index]['answer']
+
+    is_correct = (clicked_segment_id == correct_answer)
+    game_over = False
+    win = False
+
+    if is_correct:
+        game['traced_segments'].append(clicked_segment_id)
+        game['current_puzzle_index'] += 1
+
+        if game['current_puzzle_index'] >= len(DALGONA_CONFIG['puzzles']):
+            win = True
+            game_over = True
+    else:
+        game['lives'] -= 1
+        if game['lives'] <= 0:
+            game_over = True
+
+    session['panal_game'] = game
+    session.modified = True
+
+    response = {
+        'correct': is_correct,
+        'new_lives': game['lives'],
+        'game_over': game_over,
+        'win': win
+    }
+
+    if not game_over:
+        next_puzzle_index = game['current_puzzle_index']
+        response['next_puzzle'] = DALGONA_CONFIG['puzzles'][next_puzzle_index]
+
+    return jsonify(response)
+
+# --- FIN: FRAGMENTO PARA EL JUEGO DEL PANAL ---
+
 # --- Juego 4 (AI): Laberinto del Búnker ---
 BUNKER_MAP_DATA = {
     'map': [
