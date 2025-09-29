@@ -1062,6 +1062,55 @@ def gemini_chat():
     except Exception as e:
         print(f"Error en la API de Gemini: {e}")
         return jsonify({'error': 'Error al procesar la solicitud con la IA'}), 500
-   
+
+# --- Juego 2 (Minecraft): El Pergamino del Sabio Olvidado ---
+CRAFTING_DATA = {
+    'compass': {
+        'riddle': "Un guía infalible para el explorador perdido, siempre apunta al origen.",
+        'diagram_image': "/static/img/games/minecraft/pergamino_compass.png",
+        'recipe': { '1,1': 'redstone_dust', '0,1': 'iron_ingot', '2,1': 'iron_ingot', '1,0': 'iron_ingot', '1,2': 'iron_ingot' },
+        'inventory': ['redstone_dust', 'iron_ingot', 'iron_ingot', 'iron_ingot', 'iron_ingot', 'gold_ingot', 'diamond', 'stick']
+    },
+    'tnt': {
+        'riddle': "El poder de la arena y el azufre, para abrir nuevos caminos con un estruendo.",
+        'diagram_image': "/static/img/games/minecraft/pergamino_tnt.png",
+        'recipe': { '0,0': 'gunpowder', '0,2': 'gunpowder', '2,0': 'gunpowder', '2,2': 'gunpowder', '1,1': 'gunpowder', '0,1': 'sand', '1,0': 'sand', '1,2': 'sand', '2,1': 'sand' },
+        'inventory': ['gunpowder', 'gunpowder', 'gunpowder', 'gunpowder', 'gunpowder', 'sand', 'sand', 'sand', 'sand', 'gravel', 'flint']
+    }
+}
+
+@app.route('/api/minecraft/crafting/start', methods=['POST'])
+def start_minecraft_crafting():
+    puzzle_key = random.choice(list(CRAFTING_DATA.keys()))
+    puzzle_data = CRAFTING_DATA[puzzle_key]
+
+    session['crafting_recipe'] = puzzle_data['recipe']
+    session['crafting_puzzle_key'] = puzzle_key
+
+    inventory_copy = list(puzzle_data['inventory'])
+    random.shuffle(inventory_copy)
+
+    return jsonify({
+        'riddle': puzzle_data['riddle'],
+        'diagram_image': puzzle_data['diagram_image'],
+        'inventory': inventory_copy
+    })
+
+@app.route('/api/minecraft/crafting/check', methods=['POST'])
+def check_minecraft_crafting():
+    submitted_grid = request.json.get('grid_state', {})
+    correct_recipe = session.get('crafting_recipe')
+
+    if not correct_recipe:
+        return jsonify({'error': 'El juego no ha sido iniciado correctamente.'}), 400
+
+    # Normalizar el grid del usuario: eliminar celdas vacías
+    normalized_grid = {k: v for k, v in submitted_grid.items() if v is not None}
+
+    if normalized_grid == correct_recipe:
+        return jsonify({'correct': True})
+    else:
+        return jsonify({'correct': False})
+
 if __name__ == '__main__':
     app.run(debug=True)
