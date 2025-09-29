@@ -190,59 +190,59 @@ DALGONA_CONFIG = {
         'p10':{'pos': (180, 150), 'num': 3},
     },
     'segments': [ # Define los segmentos y su identificador
-        {'id': 's1', 'start': 'p1', 'end': 'p2'},
-        {'id': 's2', 'start': 'p2', 'end': 'p3'},
-        {'id': 's3', 'start': 'p3', 'end': 'p4'},
-        {'id': 's4', 'start': 'p4', 'end': 'p5'},
-        {'id': 's5', 'start': 'p5', 'end': 'p6'},
-        {'id': 's6', 'start': 'p6', 'end': 'p7'},
-        {'id': 's7', 'start': 'p7', 'end': 'p8'},
-        {'id': 's8', 'start': 'p8', 'end': 'p9'},
-        {'id': 's9', 'start': 'p9', 'end': 'p10'},
-        {'id': 's10','start': 'p10','end': 'p1'},
+        {'id': 's1', 'start': 'p1', 'end': 'p2'},   # 7-2
+        {'id': 's2', 'start': 'p2', 'end': 'p3'},   # 2-11
+        {'id': 's3', 'start': 'p3', 'end': 'p4'},   # 11-6
+        {'id': 's4', 'start': 'p4', 'end': 'p5'},   # 6-10
+        {'id': 's5', 'start': 'p5', 'end': 'p6'},   # 10-5
+        {'id': 's6', 'start': 'p6', 'end': 'p7'},   # 5-9
+        {'id': 's7', 'start': 'p7', 'end': 'p8'},   # 9-4
+        {'id': 's8', 'start': 'p8', 'end': 'p9'},   # 4-13
+        {'id': 's9', 'start': 'p9', 'end': 'p10'},  # 13-3
+        {'id': 's10','start': 'p10','end': 'p1'},   # 3-7
     ],
-    'puzzles': [ # Los acertijos y el ID del segmento correcto
-        {
-            "clue": "Para empezar, encuentra el único trazo que une dos números primos.",
-            "answer": "s10" # El trazo entre el vértice 3 y el 7
-        },
-        {
-            "clue": "El siguiente segmento es el único que conecta con un número de dos cifras.",
-            "answer": "s2" # El trazo entre el 2 y el 11
-        },
-        {
-            "clue": "Busca el segmento horizontal que se encuentre a mayor altura.",
-            "answer": "s3" # El trazo entre 11 y 6
-        },
-        {
-            "clue": "Desde el último punto, sigue el camino que lleva al único número de dos dígitos restante.",
-            "answer": "s4" # El trazo entre 6 y 10
-        },
-        {
-            "clue": "El siguiente trazo te llevará al número que es el resultado de 2+3.",
-            "answer": "s5" # El trazo entre 10 y 5
-        },
-        {
-            "clue": "Continúa por la línea que conecta con el resultado de 3x3.",
-            "answer": "s6" # El trazo entre 5 y 9
-        },
-        {
-            "clue": "Avanza por el camino que apunta al único vértice cuyo número es un cuadrado perfecto.",
-            "answer": "s7" # El trazo entre 9 y 4
-        },
-        {
-            "clue": "Elige el segmento que te dirige al número primo más alto de la figura.",
-            "answer": "s8" # El trazo entre 4 y 13
-        },
-        {
-            "clue": "Desde el último punto, dirígete al número más bajo de todos.",
-            "answer": "s1" # El trazo entre 13 -> 3, pero la conexión es 13 -> 2
-        },
-        {
-            "clue": "Solo queda un camino para cerrar la figura. ¡Hazlo con cuidado!",
-            "answer": "s9" # El trazo restante
-        }
-    ]
+'puzzles': [
+    {
+        "clue": "El único primo par se une al primo que es su propio reflejo.",
+        "answer": "s2"
+    },
+    {
+        "clue": "Dos cuadrados perfectos se enlazan aquí.",
+        "answer": "s7"
+    },
+    {
+        "clue": "El número de la mala suerte se conecta con el primer compuesto par.",
+        "answer": "s8"
+    },
+    {
+        "clue": "Un múltiplo de 5 se une con su mitad exacta.",
+        "answer": "s5"
+    },
+    {
+        "clue": "Donde dos pares caminan juntos.",
+        "answer": "s4"
+    },
+    {
+        "clue": "El primo-espejo ahora señala a la media docena.",
+        "answer": "s3"
+    },
+    {
+        "clue": "El impar más pequeño se enlaza con el número de la fortuna.",
+        "answer": "s10"
+    },
+    {
+        "clue": "El camino parte del siete y toca al único primo par.",
+        "answer": "s1"
+    },
+    {
+        "clue": "Del infortunio se baja a la trinidad sagrada.",
+        "answer": "s9"
+    },
+    {
+        "clue": "Desde el poder de tres, busca al único primo conectado.",
+        "answer": "s6"
+    }
+]
 }
 
 @app.route('/api/squid/panal/start', methods=['POST'])
