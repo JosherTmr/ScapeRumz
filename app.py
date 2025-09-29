@@ -1042,9 +1042,10 @@ def gemini_chat():
 
         # Prepara el modelo de GenAI
         model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+            model_name='models/gemini-flash-latest',
             system_instruction=GEMINI_SYSTEM_PROMPT
-        )
+            )
+
         
         # Inicia la conversación con el historial proporcionado
         chat = model.start_chat(history=history)
