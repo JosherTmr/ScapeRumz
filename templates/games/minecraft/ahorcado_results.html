@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}Mensaje Descifrado{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 1: Ahorcado</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Has descifrado la nota.</h2>
     <p class="lead">Dentro del cofre, encontraste un pergamino con un mensaje cifrado. Con cuidado, lograste resolver el enigma. Las palabras revelan no un mapa, sino una receta de crafteo.</p>
     <p>"Para ver el camino oculto, debes crear la llave."</p>
     <p>La receta muestra cómo combinar ciertos materiales. Parece que tu próximo paso es usar una mesa de crafteo para fabricar este objeto misterioso. A lo lejos, ves una.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-success btn-lg mt-3">Ir a la mesa de crafteo</button>
+        <button type="submit" class="btn btn-success btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

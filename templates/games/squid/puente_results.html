@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}Resultado: El Puente de Cristal{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 4: Puente de Cristal</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Has llegado al otro lado.</h2>
     <p class="lead">Cada paso fue una agonía, cada crujido del cristal un presagio de muerte. Viste a otros caer, sus gritos resonando en el abismo. Pero tu suerte, o tu instinto, te ha guiado a salvo.</p>
-    <p>Solo quedáis dos. El premio está al alcance. Pero solo uno puede reclamarlo. Es hora de enfrentarse en el último juego, el que da nombre a esta macabra competición.</p>
-    <p>Prepárate para el Juego del Calamar.</p>
+    <p>Solo quedan los más resistentes. El premio está al alcance. Pero antes, una última prueba de agilidad y nervios de acero.</p>
+    <p>Prepárate para el juego de Luz Roja, Luz Verde.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el juego final</button>
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}El Otro Lado{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 3: Tira y Afloja</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Lo has logrado.</h2>
-    <p class="lead">Con un último esfuerzo, llegas al otro lado del cañón, con los músculos doloridos pero el espíritu intacto. Te encuentras frente al portal en ruinas. Está hecho de una obsidiana extraña y cubierto de glifos apagados.</p>
-    <p>Al tocar el portal, sientes una débil vibración. Un panel con varios glifos se ilumina débilmente. Parece ser un mecanismo de activación, una especie de rompecabezas antiguo.</p>
-    <p>Debes alinear los glifos en el orden correcto para reactivar el portal. Es tu última esperanza de volver a casa.</p>
+    <p class="lead">Con un último esfuerzo, has ganado la prueba de fuerza. Pero el siguiente desafío no es de músculos, sino de ingenio y suerte. Sobre una mesa de piedra, encuentras una baraja de cartas con extraños símbolos de Minecraft.</p>
+    <p>Un guardián de piedra te hace un gesto para que te sientes. Parece que tendrás que apostar tu suerte.</p>
+    <p>Prepárate para el Juego de Cartas.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-success btn-lg mt-3">Activar el portal</button>
+        <button type="submit" class="btn btn-success btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

@@ -17,13 +17,13 @@ escape_rooms = {
     
     'squid': {
         'title': 'El Juego del Calamar',
-        'stages': ['intro', 'luzroja', 'luzroja_results', 'panal', 'panal_results', 'cuerda', 'cuerda_results', 'canicas', 'canicas_results', 'puente', 'puente_results', 'final'],
+        'stages': ['intro',  'panal', 'panal_results', 'cuerda', 'cuerda_results', 'canicas', 'canicas_results', 'puente', 'puente_results','luzroja', 'luzroja_results', 'final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },
     'minecraft': {
         'title': 'Aventura en Minecraft',
-        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results', 'mapa', 'mapa_results', 'cuerda_minecraft', 'cuerda_results', 'cards','mapa', 'mapa_results' 'final'],
+        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results',  'cuerda_minecraft', 'cuerda_results', 'cards','cards_results','mapa','final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },

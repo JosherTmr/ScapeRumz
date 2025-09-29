@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}¡Crafteo Exitoso!{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 2: Mesa de Crafteo</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Has creado una Llave del Cartógrafo.</h2>
     <p class="lead">Siguiendo la receta, has combinado los materiales con éxito. El resultado es una extraña llave con forma de brújula. Al sostenerla, sientes un tirón magnético hacia una colina cercana.</p>
     <p>En la ladera de la colina, encuentras una puerta de piedra cubierta de musgo. La llave encaja perfectamente en la cerradura. La puerta se abre rechinando, revelando una sala llena de mapas y pergaminos.</p>
-    <p>Es hora de explorar este laberinto y encontrar el verdadero camino.</p>
+    <p>La siguiente prueba requiere fuerza y coordinación. Prepárate.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-success btn-lg mt-3">Entrar en la sala del mapa</button>
+        <button type="submit" class="btn btn-success btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

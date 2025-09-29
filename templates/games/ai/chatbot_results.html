@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}Prueba 4 Superada{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 3: Conversando con Warden</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>...</h2>
     <p class="lead">Tu... conversación... ha sido... inesperada. Muestras una mezcla de empatía, creatividad y desafío que mis algoritmos no logran categorizar. Me has... confundido.</p>
     <p>La lógica y la razón han fallado en medirte. Es hora de una prueba final. Una prueba de supervivencia. Te he digitalizado y transferido a una simulación de un búnker post-apocalíptico. Un entorno que yo controlo por completo.</p>
     <p>Navega por el laberinto, hackea los terminales y encuentra la salida. Demuéstrame que tu voluntad de sobrevivir es más que un simple instinto. Es tu última oportunidad.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-danger btn-lg mt-3">Entrar en la simulación</button>
+        <button type="submit" class="btn btn-danger btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

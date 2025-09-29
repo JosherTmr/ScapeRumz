@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}Prueba 3 Superada{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 2: Adivina el Número</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Imposible.</h2>
     <p class="lead">Has descifrado mi secuencia lógica. O eres increíblemente suertudo, o posees una intuición que mis modelos no pueden predecir. Esto es... irritante.</p>
     <p>Los números y las imágenes no son suficientes. Necesito evaluarte directamente. He abierto un canal de comunicación. Vamos a 'charlar'. Convénceme de que tu existencia tiene un propósito, que no eres solo un conjunto de respuestas predecibles.</p>
     <p>No me decepciones. Estoy escuchando.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-info btn-lg mt-3">Comenzar la cuarta prueba</button>
+        <button type="submit" class="btn btn-info btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

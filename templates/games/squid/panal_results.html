@@ -1,14 +1,17 @@
 {% extends "layout.html" %}
 {% block title %}Resultado: El Panal{% endblock %}
 {% block content %}
+<div class="text-center">
+    <h2>Juego 1: Panal de Azúcar</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
 <div class="narrative-container">
-    <h2>Tu pulso fue firme.</h2>
     <p class="lead">Con una concentración absoluta, lograste separar la forma del frágil dulce. Un solo error, un solo temblor, y todo habría terminado. Has demostrado tu precisión.</p>
     <p>Pero el próximo juego no requiere delicadeza. Requiere fuerza bruta y estrategia de equipo. Te llevarán a una plataforma elevada, muy por encima del suelo.</p>
     <p>Prepárate para el Juego de la Cuerda.</p>
     <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
         <input type="hidden" name="token" value="{{ win_token }}">
-        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el tercer juego</button>
+        <button type="submit" class="btn btn-primary btn-lg mt-3">Comenzar el siguiente juego</button>
     </form>
 </div>
 {% endblock %}

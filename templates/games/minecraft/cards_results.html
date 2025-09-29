@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Resultado: Juego de Cartas{% endblock %}
+{% block content %}
+<div class="text-center">
+    <h2>Juego 4: Juego de Cartas</h2>
+    <h3>¡Prueba Superada!</h3>
+</div>
+<div class="narrative-container">
+    <p class="lead">Tu memoria y tu suerte te han servido bien. El guardián de piedra asiente con la cabeza y te entrega un pergamino enrollado. Al abrirlo, descubres que es un fragmento de un mapa antiguo.</p>
+    <p>El mapa parece mostrar una ruta a través de un santuario lleno de trampas y acertijos. Es la única salida que ves.</p>
+    <p>Prepárate para explorar el Mapa del Santuario.</p>
+    <form method="POST" action="{{ url_for('win_stage', room_name=room_name, stage_name=stage_name) }}">
+        <input type="hidden" name="token" value="{{ win_token }}">
+        <button type="submit" class="btn btn-success btn-lg mt-3">Comenzar el siguiente juego</button>
+    </form>
+</div>
+{% endblock %}
