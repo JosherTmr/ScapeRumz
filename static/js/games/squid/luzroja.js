@@ -1,4 +1,12 @@
+/**
+ * REFACTORIZACIÓN COMPLETA DEL JUEGO LUZ ROJA, LUZ VERDE
+ * ------------------------------------------------------
+ * Implementa un bucle de juego basado en sondeo (polling) para mantener
+ * al cliente sincronizado con un estado de juego autoritativo del servidor.
+ * Esto resuelve problemas de desincronización y mejora la fluidez.
+ */
 function initLuzRojaGame(roomName, stageName, winToken) {
+    // Referencias a elementos del DOM
     const gameContainer = document.querySelector('.game-container');
     const boardElement = document.getElementById('game-board');
     const timerElement = document.getElementById('timer');
@@ -10,21 +18,15 @@ function initLuzRojaGame(roomName, stageName, winToken) {
     const answerInput = document.getElementById('answer-input');
     const submitAnswerBtn = document.getElementById('submit-answer');
 
-    let gameState = {
-        player_pos: null,
-        map: null,
-        light_state: 'green',
-        time_left: 0,
-        game_over: false,
-        win: false
-    };
+    let playerElement = null; // Referencia al div del jugador
+    let gameLoopInterval = null; // ID del intervalo del bucle de juego
+    let isGameOver = false; // Flag para detener el bucle
 
-    let lightStateTimeout;
-    let masterTimerInterval;
-    let questionTimerInterval;
-
-    function renderBoard(map, playerPos) {
-        if (!map || !playerPos) return;
+    /**
+     * Optimización: Renderiza el tablero una sola vez, sin el jugador.
+     * El jugador se crea como un elemento separado.
+     */
+    function renderBoard(map) {
         boardElement.innerHTML = '';
         const rows = map.length;
         const cols = map[0].length;
@@ -34,34 +36,62 @@ function initLuzRojaGame(roomName, stageName, winToken) {
             for (let x = 0; x < cols; x++) {
                 const tile = document.createElement('div');
                 tile.className = `tile tile-${map[y][x]}`;
-                if (playerPos.x === x && playerPos.y === y) {
-                    const playerDiv = document.createElement('div');
-                    playerDiv.className = 'player';
-                    tile.appendChild(playerDiv);
-                }
                 boardElement.appendChild(tile);
+            }
+        }
+
+        // Crear el jugador una vez y añadirlo al tablero
+        playerElement = document.createElement('div');
+        playerElement.className = 'player';
+        boardElement.appendChild(playerElement);
+    }
+
+    /**
+     * Optimización: Mueve al jugador actualizando su posición en la cuadrícula CSS.
+     * Mucho más eficiente que volver a renderizar todo el tablero.
+     */
+    function updatePlayerPosition(pos) {
+        if (playerElement && pos) {
+            playerElement.style.gridColumnStart = pos.x + 1;
+            playerElement.style.gridRowStart = pos.y + 1;
+        }
+    }
+
+    // Actualiza la UI del temporizador principal
+    function updateTimerUI(timeLeft) {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Actualiza la UI del semáforo
+    function updateLightUI(lightState) {
+        const newClass = `light-status ${lightState === 'green' ? 'light-green' : 'light-red'}`;
+        if (lightStatusElement.className !== newClass) {
+            lightStatusElement.className = newClass;
+            lightStatusElement.textContent = lightState === 'green' ? 'LUZ VERDE' : 'LUZ ROJA';
+        }
+    }
+
+    // Muestra u oculta el modal de pregunta
+    function updateQuestionUI(question, qTimeLeft) {
+        if (question) {
+            questionText.textContent = question;
+            questionTimerElement.textContent = qTimeLeft;
+            questionTimerElement.style.color = qTimeLeft <= 3 ? 'var(--squid-red)' : 'var(--squid-text)';
+            if (questionModal.style.display !== 'flex') {
+                questionModal.style.display = 'flex';
+                answerInput.focus();
+            }
+        } else {
+            if (questionModal.style.display !== 'none') {
+                questionModal.style.display = 'none';
+                answerInput.value = '';
             }
         }
     }
 
-    function updateLightUI(lightState) {
-        gameState.light_state = lightState;
-        lightStatusElement.className = `light-status ${lightState === 'green' ? 'light-green' : 'light-red'}`;
-        lightStatusElement.textContent = lightState === 'green' ? 'LUZ VERDE' : 'LUZ ROJA';
-    }
-
-    function updateMasterTimer() {
-        if (gameState.time_left > 0) {
-            gameState.time_left--;
-            const minutes = Math.floor(gameState.time_left / 60);
-            const seconds = gameState.time_left % 60;
-            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        } else {
-            // BUG FIX: Se pasa el efecto 'shake' para que la animación se active.
-            endGame(false, "¡Se acabó el tiempo!", ['shake']);
-        }
-    }
-
+    // Maneja los efectos visuales como el temblor
     function handleEffects(effects = []) {
         if (effects.includes('shake')) {
             gameContainer.classList.add('shake-animation');
@@ -69,50 +99,57 @@ function initLuzRojaGame(roomName, stageName, winToken) {
         }
     }
 
-    // REFACTOR: La función ahora acepta un array de efectos para centralizar la lógica.
-    function endGame(isWin, message, effects = []) {
-        if (gameState.game_over) return;
-        gameState.game_over = true;
-        gameState.win = isWin;
-
-        clearTimeout(lightStateTimeout);
-        clearInterval(masterTimerInterval);
-        clearInterval(questionTimerInterval);
-
-        messageElement.textContent = message;
-        handleEffects(effects);
-
-        if (isWin) {
-            submitWin(roomName, stageName, winToken);
-        } else {
-            // Se espera 500ms si la animación de shake está activa para que sea visible.
-            const delay = effects.includes('shake') ? 500 : 0;
-            setTimeout(() => failGame(message, roomName), delay);
+    /**
+     * Función central del bucle de juego.
+     * Solicita el estado al servidor y actualiza toda la UI.
+     */
+    async function updateGameState() {
+        if (isGameOver) {
+            clearInterval(gameLoopInterval);
+            return;
         }
-    }
-
-    async function requestNextLightState() {
-        if (gameState.game_over) return;
 
         try {
-            const response = await fetch('/api/squid/luzroja/state');
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
+            const response = await fetch('/api/squid/luzroja/gamestate');
+            if (!response.ok) throw new Error('Failed to fetch gamestate');
+            const state = await response.json();
 
-            if (data.error || gameState.game_over) {
+            if (state.error) {
+                console.error("Error from server:", state.error);
+                isGameOver = true;
                 return;
             }
 
-            updateLightUI(data.light_state);
-            lightStateTimeout = setTimeout(requestNextLightState, data.duration);
+            // Actualizar todos los componentes de la UI con el estado del servidor
+            updatePlayerPosition(state.player_pos);
+            updateTimerUI(state.time_left);
+            updateLightUI(state.light_state);
+            updateQuestionUI(state.question, state.q_time_left);
+            messageElement.textContent = state.message;
+            handleEffects(state.effects);
 
+            // Comprobar condiciones de fin de juego
+            if (state.game_over) {
+                isGameOver = true;
+                clearInterval(gameLoopInterval);
+                const delay = (state.effects && state.effects.includes('shake')) ? 500 : 0;
+                setTimeout(() => {
+                    if (state.win) {
+                        submitWin(roomName, stageName, winToken);
+                    } else {
+                        failGame(state.message, roomName);
+                    }
+                }, delay);
+            }
         } catch (error) {
-            console.error("Error fetching new light state:", error);
+            console.error("Error updating game state:", error);
+            isGameOver = true; // Detener el juego si hay un error de red
         }
     }
 
+    // Envía el movimiento del jugador al servidor
     async function handleKeydown(e) {
-        if (questionModal.style.display === 'flex' || gameState.game_over) return;
+        if (isGameOver || questionModal.style.display === 'flex') return;
 
         let dx = 0, dy = 0;
         switch(e.key) {
@@ -123,113 +160,57 @@ function initLuzRojaGame(roomName, stageName, winToken) {
             default: return;
         }
 
-        const response = await fetch('/api/squid/luzroja/move', {
+        // No se necesita manejar la respuesta, el bucle de juego lo hará
+        await fetch('/api/squid/luzroja/move', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ dx, dy })
         });
-        const data = await response.json();
-
-        if (data.status === 'game_over') {
-            // BUG FIX: Se pasa el array de efectos a endGame para centralizar la lógica.
-            endGame(false, data.message, data.effects);
-        } else if (data.status === 'ask_question') {
-            showQuestion(data.question);
-        } else if (data.status === 'success') {
-            gameState.player_pos = data.new_pos;
-            renderBoard(gameState.map, gameState.player_pos);
-            if (data.message) messageElement.textContent = data.message;
-            if (data.win) {
-                endGame(true, "¡Has escapado!");
-            }
-        }
     }
 
-    function showQuestion(question) {
-        clearTimeout(lightStateTimeout);
-        // BUG FIX: No se detiene el temporizador principal. El tiempo debe seguir corriendo.
-        // clearInterval(masterTimerInterval);
-
-        questionText.textContent = question;
-        questionModal.style.display = 'flex';
-        answerInput.focus();
-
-        let qTime = 10;
-        questionTimerElement.textContent = qTime;
-        questionTimerElement.style.color = 'var(--squid-text)';
-
-        questionTimerInterval = setInterval(() => {
-            qTime--;
-            questionTimerElement.textContent = qTime;
-            if (qTime <= 3) {
-                questionTimerElement.style.color = 'var(--squid-red)';
-            }
-            if (qTime <= 0) {
-                clearInterval(questionTimerInterval);
-                // Al expirar el tiempo, se llama a submitAnswer. El servidor se encargará
-                // de la lógica de timeout, reseteando la posición del jugador y
-                // asegurando que el estado del juego esté sincronizado.
-                submitAnswer();
-            }
-        }, 1000);
-    }
-
-    function hideQuestion(message) {
-        clearInterval(questionTimerInterval);
-        questionModal.style.display = 'none';
-        answerInput.value = '';
-        messageElement.textContent = message;
-    }
-
+    // Envía la respuesta a la pregunta al servidor
     async function submitAnswer() {
+        if (isGameOver) return;
         const answer = answerInput.value;
-        clearInterval(questionTimerInterval);
+        answerInput.value = ''; // Limpiar input inmediatamente
 
-        const response = await fetch('/api/squid/luzroja/answer', {
+        // No se necesita manejar la respuesta, el bucle de juego lo hará
+        await fetch('/api/squid/luzroja/answer', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ answer })
         });
-        const data = await response.json();
-
-        hideQuestion(data.message);
-        gameState.player_pos = data.player_pos;
-        renderBoard(gameState.map, gameState.player_pos);
-        if (data.effects) handleEffects(data.effects);
-
-        lightStateTimeout = setTimeout(requestNextLightState, 1000);
-        // BUG FIX: El temporizador principal ya no se detiene, por lo que no es necesario reiniciarlo.
-        // masterTimerInterval = setInterval(updateMasterTimer, 1000);
     }
 
+    // Inicializa el juego
     async function startGame() {
         messageElement.textContent = "Iniciando nueva partida...";
         const response = await fetch('/api/squid/luzroja/start', { method: 'POST' });
         const data = await response.json();
 
         if (data.error) {
-            endGame(false, data.error);
+            failGame(data.error, roomName);
             return;
         }
 
-        Object.assign(gameState, data);
-        renderBoard(gameState.map, gameState.player_pos);
-        updateLightUI(data.light_state);
+        renderBoard(data.map);
 
-        masterTimerInterval = setInterval(updateMasterTimer, 1000);
-        lightStateTimeout = setTimeout(requestNextLightState, data.duration);
-
+        // Configurar listeners de eventos
         document.addEventListener('keydown', handleKeydown);
         submitAnswerBtn.addEventListener('click', submitAnswer);
         answerInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') submitAnswer();
         });
-        messageElement.textContent = "Usa las flechas para moverte.";
+
+        // Iniciar el bucle de juego principal
+        gameLoopInterval = setInterval(updateGameState, 250); // Sondea 4 veces por segundo
     }
 
     startGame();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Las variables room_name, stage_name y win_token son inyectadas
+    // globalmente por la plantilla de Jinja2.
     initLuzRojaGame(room_name, stage_name, win_token);
 });
