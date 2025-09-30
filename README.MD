@@ -1,13 +1,74 @@
 # Escape Room Virtual en Flask
 
-Este es un proyecto de una aplicación web de Escape Room modular creada con Python y el framework Flask.
+¡Bienvenido al proyecto de Escape Room Virtual! Esta es una aplicación web modular construida con Python y Flask que te permite crear y jugar a través de diferentes salas de escape temáticas, cada una con sus propios minijuegos y desafíos.
 
-## Tecnologías Utilizadas
+## Características
 
-- **Backend**: Python con Flask (maneja el estado del juego y la lógica principal).
-- **Frontend**: Plantillas de Jinja2, HTML5, CSS3.
-- **Interactividad**: JavaScript puro (Vanilla JS), dividido en una librería de utilidades y scripts específicos por juego.
-- **Estilos**: Bootstrap 5 como base, con estilos personalizados por juego.
+- **Arquitectura Modular**: Añade fácilmente nuevas salas de escape o nuevos juegos a las salas existentes.
+- **Backend Robusto**: La lógica del juego reside en el servidor Flask para prevenir trampas y gestionar el estado de forma segura.
+- **Frontend Interactivo**: Uso de JavaScript para crear experiencias de juego dinámicas.
+- **Suite de Pruebas Completa**: Cobertura de pruebas con `pytest` para garantizar la fiabilidad del código.
+
+---
+
+## Cómo Empezar
+
+Sigue estas instrucciones para tener una copia del proyecto funcionando en tu máquina local para desarrollo y pruebas.
+
+### Prerrequisitos
+
+- Python 3.9 o superior
+- `pip` para la gestión de paquetes
+
+### Instalación
+
+1.  **Clona el repositorio:**
+    ```bash
+    git clone <URL_DEL_REPOSITORIO>
+    cd <NOMBRE_DEL_DIRECTORIO>
+    ```
+
+2.  **Crea y activa un entorno virtual (recomendado):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # En Windows: venv\Scripts\activate
+    ```
+
+3.  **Instala las dependencias:**
+    El proyecto utiliza `pyproject.toml` para definir las dependencias. Instálalas usando `pip`:
+    ```bash
+    pip install -e .
+    ```
+    El comando `-e` lo instala en modo "editable", lo que es ideal para el desarrollo.
+
+### Ejecutar la Aplicación
+
+Una vez instaladas las dependencias, puedes iniciar la aplicación Flask:
+
+```bash
+flask --app app run
+```
+
+O si prefieres, directamente con Python:
+```bash
+python app.py
+```
+
+La aplicación estará disponible en `http://127.0.0.1:5000`.
+
+---
+
+## Ejecutar las Pruebas
+
+Este proyecto incluye una suite de pruebas completa para verificar la funcionalidad del núcleo y la lógica de los juegos.
+
+Para ejecutar las pruebas, asegúrate de haber instalado las dependencias de desarrollo y luego ejecuta `pytest` desde el directorio raíz del proyecto:
+
+```bash
+pytest
+```
+
+Verás la salida de las pruebas indicando si todas han pasado correctamente.
 
 ---
 
@@ -16,170 +77,79 @@ Este es un proyecto de una aplicación web de Escape Room modular creada con Pyt
 ```
 /
 ├── app.py              # Aplicación principal de Flask y lógica de los juegos
+├── tests/
+│   └── test_app.py     # Pruebas de la aplicación
 ├── static/
-│   ├── css/            # Estilos CSS
+│   ├── css/
 │   ├── img/
-│   │   └── games/      # Imágenes específicas de cada juego
 │   └── js/
-│       ├── game_utils.js # Funciones globales (submitWin, failGame)
-│       └── games/
-│           └── [room_name]/
-│               └── [game_name].js   # Lógica JS del juego
 ├── templates/
-│   ├── layout.html     # Plantilla base
+│   ├── layout.html
 │   └── games/
-│       └── [room_name]/
-│           └── [game_name].html # Plantilla HTML/Jinja2 del juego
-└── requirements.txt
+├── pyproject.toml      # Definición del proyecto y dependencias
+├── requirements.txt    # Lista de dependencias (generada)
+└── README.MD           # Esta documentación
 ```
 
 ---
 
-## Documentación para Desarrolladores
+## Documentación de las Salas y Juegos
 
-### Cómo añadir un nuevo juego (tipo `unique`)
+A continuación se detallan las salas de escape disponibles y los juegos que contienen.
 
-Los juegos de tipo `unique` ofrecen la máxima flexibilidad y son ideales para minijuegos interactivos. Sigue estos pasos para integrar uno nuevo.
+### 1. El Juego del Calamar (`squid`)
 
----
+Una sala de alta tensión inspirada en la popular serie.
 
-### Paso 1: Registrar el juego en `app.py`
+-   **Panal de Azúcar (`panal`)**: Un juego colaborativo donde los jugadores deben resolver acertijos numéricos para trazar una forma en un panal de azúcar antes de que se acabe el tiempo o las vidas.
+    -   **API:**
+        -   `POST /api/squid/panal/start`: Inicia el juego, configura las vidas y el puzzle inicial.
+        -   `POST /api/squid/panal/check`: Valida el segmento que el usuario ha seleccionado.
 
-1. Abre `app.py` y localiza el diccionario `escape_rooms`.
-2. Busca la sala (`room`) a la que quieres añadir el juego.
-3. Añade el nombre de tu nuevo juego (ej: `"nuevo_juego"`) a la lista `stages`.
+-   **Luz Roja, Luz Verde (`luzroja`)**: Un juego de movimiento y reflejos. Los jugadores deben cruzar un campo moviéndose solo durante la "luz verde". Si se mueven en "luz roja", deben responder una pregunta correctamente para no ser enviados al inicio.
+    -   **API:**
+        -   `POST /api/squid/luzroja/start`: Inicializa el mapa y la posición del jugador.
+        -   `GET /api/squid/luzroja/gamestate`: Devuelve el estado actual del juego (posición, estado de la luz, tiempo restante).
+        -   `POST /api/squid/luzroja/move`: Procesa el movimiento del jugador.
+        -   `POST /api/squid/luzroja/answer`: Valida la respuesta a una pregunta.
 
-**Ejemplo:** Añadiendo `"adivina_la_imagen"` a la sala `"ia"`:
+### 2. Aventura en Minecraft (`minecraft`)
 
-```python
-'ia': {
-    'title': 'Sala de Inteligencia Artificial',
-    'stages': ['real_or_ia', 'adivina_la_imagen'],  # <-- Añadir aquí
-    'template_type': 'unique',
-    'data': {}
-},
-```
+Una sala de exploración y resolución de acertijos en el universo de Minecraft.
 
----
+-   **Mapa del Santuario (`mapa`)**: Los jugadores exploran un mapa, evitando trampas y encontrando notas con acertijos. Las respuestas a los acertijos son códigos que abren puertas para poder alcanzar la meta.
+    -   **API:**
+        -   `POST /api/minecraft/map/start`: Crea el estado del juego, incluyendo el mapa y la posición del jugador.
+        -   `POST /api/minecraft/map/move`: Gestiona el movimiento del jugador y las colisiones.
+        -   `POST /api/minecraft/map/solve`: Valida un código introducido por el usuario para abrir puertas.
+        -   `GET /api/minecraft/map/state`: Devuelve el estado de las trampas activas.
 
-### Paso 2: Crear los archivos del Frontend
+### 3. Enigma de Inteligencia Artificial (`ai`)
 
-Crea los siguientes archivos, reemplazando `[room_name]` y `[game_name]` con los nombres correctos.
+Una sala donde te enfrentas a desafíos diseñados por una IA.
 
-- Archivo HTML: `templates/games/[room_name]/[game_name].html`
-- Archivo JavaScript: `static/js/games/[room_name]/[game_name].js`
+-   **¿Real o IA? (`real_or_ia`)**: Un juego de discernimiento visual. Se le muestran al jugador imágenes y debe adivinar si fueron generadas por una IA o si son fotografías reales.
+    -   **API:**
+        -   `POST /api/ai/real_or_ai/start`: Inicia el juego con un set de imágenes aleatorias.
+        -   `POST /api/ai/real_or_ai/guess`: Procesa la respuesta del jugador y actualiza la puntuación y las vidas.
 
----
+-   **Adivina el Número (`guess_number`)**: Un clásico juego de adivinanza. El jugador debe adivinar un número secreto entre 1 y 1000 en 10 intentos, recibiendo pistas de si su intento fue "demasiado alto" o "demasiado bajo".
+    -   **API:**
+        -   `POST /api/ai/guess_number/start`: Genera un número secreto y lo guarda en la sesión.
+        -   `POST /api/ai/guess_number/check`: Comprueba el número del jugador contra el número secreto.
 
-### Paso 3: Desarrollar la Lógica del Backend (API en `app.py`)
-
-Para evitar trampas, la lógica principal del juego debe residir en el backend.  
-El frontend solo se comunica a través de una API.
-
-- **Ruta de inicio (`/start`)**: inicializa el estado del juego en la `session` de Flask.  
-- **Ruta de acción (`/check`, `/guess`, etc.)**: recibe la acción del jugador, la valida contra la `session` y devuelve un JSON.
-
-**Ejemplo de API para un juego:**
-
-```python
-from flask import session, jsonify, request
-
-@app.route('/api/[room_name]/[game_name]/start', methods=['POST'])
-def start_new_game():
-    # Lógica para iniciar el juego
-    session['game_secret'] = "valor_secreto"
-    session['game_attempts'] = 3
-    return jsonify({'success': True, 'first_question': 'Pregunta inicial'})
-
-@app.route('/api/[room_name]/[game_name]/check', methods=['POST'])
-def check_new_game_answer():
-    data = request.json
-    user_answer = data.get('answer')
-
-    # Validar la respuesta
-    is_correct = (user_answer == session['game_secret'])
-    session['game_attempts'] -= 1
-
-    # Condiciones de victoria o derrota
-    if is_correct:
-        return jsonify({'status': 'win', 'message': '¡Correcto!'})
-    elif session['game_attempts'] <= 0:
-        return jsonify({'status': 'lose', 'message': 'Sin intentos.'})
-    else:
-        return jsonify({'status': 'continue', 'message': 'Incorrecto, sigue.'})
-```
+-   **Chatbot (`chatbot`)**: Un desafío conversacional donde el jugador interactúa con una IA (potenciada por Google Gemini) para convencerla de que es humano superando 3 escenarios de reflexión.
+    -   **API:**
+        -   `POST /api/gemini_chat`: Envía el historial de la conversación a la API de Gemini y devuelve la respuesta de la IA.
 
 ---
 
-### Paso 4: Construir el Frontend
+## Cómo Añadir un Nuevo Juego
 
-#### Archivo HTML `[game_name].html`
+La estructura modular facilita la adición de nuevos juegos. Sigue la guía que estaba previamente en este `README` (ahora parte de la documentación para contribuir) para añadir tu propio minijuego. Recuerda siempre:
 
-Debe heredar de `layout.html` y estructurar los scripts en el bloque `scripts`.
-
-```html
-{% extends "layout.html" %}
-
-{% block content %}
-<style>
-    /* ... tus estilos ... */
-</style>
-
-<div id="game-container"></div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/game_utils.js') }}"></script>
-<script src="{{ url_for('static', filename='js/games/[room_name]/[game_name].js') }}"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        initNewGame('{{ room_name }}', '{{ stage_name }}', '{{ win_token }}');
-    });
-</script>
-{% endblock %}
-```
-
----
-
-#### Archivo JavaScript `[game_name].js`
-
-La lógica del frontend debe estar encapsulada en una función `init...` y usar las funciones de `game_utils.js`.
-
-```javascript
-/**
- * Inicializa el [Nombre del Juego].
- * @param {string} roomName - Nombre de la sala (inyectado por Flask).
- * @param {string} stageName - Nombre de la etapa (inyectado por Flask).
- * @param {string} winToken - Token de seguridad para la victoria.
- */
-function initNewGame(roomName, stageName, winToken) {
-    // 1. Obtener referencias a los elementos del DOM
-    const button = document.getElementById('my-button');
-
-    // 2. Lógica para comunicarse con la API del backend
-    async function checkAnswer() {
-        const response = await fetch('/api/[room_name]/[game_name]/check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ answer: 'valor' })
-        });
-        const result = await response.json();
-
-        // 3. Reaccionar a la respuesta del backend
-        if (result.status === 'win') {
-            submitWin(roomName, stageName, winToken);
-        } else if (result.status === 'lose') {
-            failGame("Mensaje de derrota.", roomName);
-        } else {
-            // El juego continúa... actualizar la UI.
-        }
-    }
-
-    // 4. Añadir event listeners
-    button.addEventListener('click', checkAnswer);
-
-    // 5. Iniciar el juego (opcional)
-    // fetch('/api/[room_name]/[game_name]/start', { method: 'POST' });
-}
-```
+1.  **Registrar la etapa** en el diccionario `escape_rooms` en `app.py`.
+2.  **Crear los archivos HTML y JS** en `templates` y `static`.
+3.  **Desarrollar la lógica de la API** en `app.py`, manteniendo el estado del juego en la `session`.
+4.  **Construir el frontend** para que se comunique con tu nueva API.
+5.  **¡Añadir pruebas!** Crea nuevos tests en `tests/test_app.py` para tu juego.
