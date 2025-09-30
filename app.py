@@ -23,7 +23,7 @@ escape_rooms = {
     },
     'minecraft': {
         'title': 'Aventura en Minecraft',
-        'stages': ['intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results',  'cuerda_minecraft', 'cuerda_results', 'cards','cards_results','mapa','final'],
+        'stages': ['crafting','intro', 'ahorcado', 'ahorcado_results', 'crafting', 'crafting_results',  'cuerda_minecraft', 'cuerda_results', 'cards','cards_results','mapa','final'],
         'template_type': 'unique', # Cada etapa tiene su propia plantilla
         'data': {} # La lógica está en el frontend
     },
