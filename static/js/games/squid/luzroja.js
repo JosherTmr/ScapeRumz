@@ -47,13 +47,18 @@ function initLuzRojaGame(roomName, stageName, winToken) {
     }
 
     /**
-     * Optimización: Mueve al jugador actualizando su posición en la cuadrícula CSS.
-     * Mucho más eficiente que volver a renderizar todo el tablero.
+     * CORREGIDO: Mueve al jugador encontrando la celda del tablero correcta y
+     * añadiéndolo como hijo. Esto preserva la estructura DOM esperada por el CSS
+     * (.tile > .player) y es más eficiente que un re-renderizado completo.
      */
     function updatePlayerPosition(pos) {
         if (playerElement && pos) {
-            playerElement.style.gridColumnStart = pos.x + 1;
-            playerElement.style.gridRowStart = pos.y + 1;
+            const cols = 15; // Ancho del tablero definido en la configuración
+            const tileIndex = pos.y * cols + pos.x;
+            const targetTile = boardElement.children[tileIndex];
+            if (targetTile) {
+                targetTile.appendChild(playerElement);
+            }
         }
     }
 
