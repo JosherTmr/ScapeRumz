@@ -710,20 +710,20 @@ LUZ_ROJA_NUEVO_CONFIG = {
         [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,1,1,1,1,1,1,1,0,0,0,0,1],
+        [1,0,1,1,1,1,1,1,1,1,0,1,1,1,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,1,1,1,1,1,1,1,1,1,1,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,0,0,0,0,1,1,1,1,1,0,0,1],
+        [1,1,1,0,0,0,0,1,1,1,1,1,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,1,1,1,1,1,0,0,0,0,0,0,0,1],
-        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,1,1,1,0,0,0,0,0,1,1,1],
+        [1,0,0,0,0,0,0,0,1,1,1,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
         [1,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
         [1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
@@ -732,22 +732,41 @@ LUZ_ROJA_NUEVO_CONFIG = {
         [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     'start_pos': {'x': 7, 'y': 24},
-    'time_limit': 120, # Aumentado para dar más margen
-    'light_green_duration': (3, 6), # (min, max) segundos
+    'time_limit': 60, # Aumentado para dar más margen
+    'light_green_duration': (1, 3), # (min, max) segundos
     'light_red_duration': (2, 5),   # (min, max) segundos
     'question_time_limit': 10,
     'questions': [
-            {"question": "Si un cubo tiene un volumen de 27 cm³, ¿cuánto mide cada arista?", "answer": "3"},
-            {"question": "¿Cuál es el número primo inmediatamente anterior a 100?", "answer": "97"},
-            {"question": "¿En qué año cayó el Imperio Romano de Occidente?", "answer": "476"},
-            {"question": "¿Cuál es el logaritmo en base 10 de 1000?", "answer": "3"},
-            {"question": "¿Qué científico descubrió los rayos X?", "answer": "wilhelm roentgen"},
-            {"question": "¿Qué número sigue en la secuencia 1, 1, 2, 3, 5, 8, 13, ...?", "answer": "21"},
-            {"question": "¿Quién escribió 'La crítica de la razón pura'?", "answer": "immanuel kant"},
-            {"question": "¿Cuál es el país con mayor número de husos horarios?", "answer": "francia"},
-            {"question": "¿Cuál es el metal líquido a temperatura ambiente?", "answer": "mercurio"},
-            {"question": "¿Cuál es la derivada de sen(x)?", "answer": "cos(x)"}
-    ]
+    {"question": "🚨 ¡TE MOVISTE! Responde rápido: ¿Cuántas patas tiene una araña?", "answer": "8"},
+    
+    {"question": "⚠️ ¡QUIETO! ¿De qué color es un semáforo cuando debes PARAR?", "answer": "rojo"},
+    
+    {"question": "🎯 ¡PENALIZACIÓN! ¿Cuántos lados tiene un triángulo?", "answer": "3"},
+    
+    {"question": "⏰ ¡NO TE MUEVAS! ¿Cuántos minutos hay en una hora?", "answer": "60"},
+    
+    {"question": "🌙 ¡CASTIGO! ¿Cuántos planetas hay en nuestro sistema solar?", "answer": "8"},
+    
+    {"question": "🔢 ¡ATRAPADO! ¿Cuánto es 7 x 8?", "answer": "56"},
+    
+    {"question": "🌍 ¡ELIMINACIÓN PENDIENTE! ¿En qué continente está Egipto?", "answer": "africa"},
+    
+    {"question": "⚡ ¡INFRACCIÓN! ¿Cuántos días tiene febrero en un año normal?", "answer": "28"},
+    
+    {"question": "🎮 ¡DETENTE! ¿De qué color son los Pitufos?", "answer": "azul"},
+    
+    {"question": "🧠 ¡ÚLTIMA OPORTUNIDAD! ¿Cuántos jugadores hay en un equipo de fútbol en la cancha?", "answer": "11"},
+    
+    {"question": "💀 ¡RESPONDE YA! ¿Cuál es la capital de España?", "answer": "madrid"},
+    
+    {"question": "🎲 ¡NO ESCAPARÁS! ¿Cuántas caras tiene un dado normal?", "answer": "6"},
+    
+    {"question": "⭐ ¡PENALTI! ¿Qué animal es Sonic?", "answer": "erizo"},
+    
+    {"question": "🔴 ¡VIOLACIÓN! ¿Cuántos continentes hay en el mundo?", "answer": "7"},
+    
+    {"question": "🚦 ¡ADVERTENCIA FINAL! ¿Cuántas letras tiene el abecedario español?", "answer": "27"}
+]
 }
 
 @app.route('/api/squid/luzroja/start', methods=['POST'])
