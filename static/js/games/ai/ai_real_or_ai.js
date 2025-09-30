@@ -11,15 +11,13 @@
 function initRealOrAIGame(roomName, stageName, winToken) {
     // --- Referencias al DOM ---
     const gameImage = document.getElementById('game-image');
-    const livesDisplay = document.getElementById('lives-display');
     const scoreDisplay = document.getElementById('score-display');
     const btnReal = document.getElementById('btn-real');
     const btnIA = document.getElementById('btn-ia');
     const feedbackOverlay = document.getElementById('feedback-overlay');
 
     // --- Configuración del Juego ---
-    const TOTAL_LIVES = 3;
-    const IMAGES_TO_WIN = 10;
+    const IMAGES_TO_WIN = 8; // Objetivo de 8 aciertos
     const IMAGE_PATH = '/static/img/ai_game/';
 
     // --- Estado del Juego ---
@@ -34,8 +32,7 @@ function initRealOrAIGame(roomName, stageName, winToken) {
             if (!response.ok) throw new Error('Failed to start game');
             const data = await response.json();
 
-            updateScoreUI(0);
-            updateLivesUI(3);
+            updateScoreUI(data.score);
             gameImage.src = IMAGE_PATH + data.image_file;
             setButtonsDisabled(false);
 
@@ -68,7 +65,6 @@ function initRealOrAIGame(roomName, stageName, winToken) {
             const data = await response.json();
 
             showFeedback(data.correct);
-            updateLivesUI(data.new_lives);
             updateScoreUI(data.new_score);
 
             setTimeout(() => {
@@ -96,10 +92,6 @@ function initRealOrAIGame(roomName, stageName, winToken) {
         feedbackOverlay.style.display = 'flex';
     }
 
-    function updateLivesUI(currentLives) {
-        livesDisplay.textContent = '❤️'.repeat(currentLives) + '🖤'.repeat(TOTAL_LIVES - currentLives);
-    }
-
     function updateScoreUI(currentScore) {
         scoreDisplay.textContent = `Correctas: ${currentScore} / ${IMAGES_TO_WIN}`;
     }
@@ -114,7 +106,8 @@ function initRealOrAIGame(roomName, stageName, winToken) {
             feedbackOverlay.style.display = 'flex';
             setTimeout(() => submitWin(roomName, stageName, winToken), 2000);
         } else {
-            const message = "No has superado la prueba. La IA te ha engañado.";
+            // Este caso solo ocurriría si nos quedamos sin imágenes, lo cual es improbable.
+            const message = "Se ha producido un error inesperado. No has podido completar la prueba.";
             failGame(message, roomName);
         }
     }

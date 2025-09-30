@@ -952,18 +952,21 @@ REAL_OR_AI_IMAGE_BANK = [
 
 @app.route('/api/ai/real_or_ai/start', methods=['POST'])
 def start_real_or_ai_game():
-    image_set = random.sample(REAL_OR_AI_IMAGE_BANK, 10)
+    # Baraja todo el banco de imágenes para que el juego sea más dinámico
+    image_set = random.sample(REAL_OR_AI_IMAGE_BANK, len(REAL_OR_AI_IMAGE_BANK))
     session['real_or_ai_game'] = {
         'images': image_set,
         'score': 0,
-        'lives': 3,
         'current_index': 0,
-        'images_to_win': 10
+        'images_to_win': 8 # El objetivo de aciertos ahora es 8
     }
     session.modified = True
 
     first_image = session['real_or_ai_game']['images'][0]['file']
-    return jsonify({'image_file': first_image})
+    return jsonify({
+        'image_file': first_image,
+        'score': 0
+    })
 
 @app.route('/api/ai/real_or_ai/guess', methods=['POST'])
 def real_or_ai_guess():
@@ -974,23 +977,26 @@ def real_or_ai_guess():
     guess = request.json.get('guess')
     current_index = game['current_index']
 
+    if current_index >= len(game['images']):
+        # Esto no debería ocurrir si la lógica de victoria funciona, pero es una salvaguarda
+        return jsonify({'error': 'No more images left', 'game_over': True, 'win': False}), 500
+
     correct_answer = game['images'][current_index]['type']
     is_correct = (guess == correct_answer)
 
     if is_correct:
         game['score'] += 1
-    else:
-        game['lives'] -= 1
 
     game['current_index'] += 1
 
-    game_over = game['lives'] <= 0 or game['score'] >= game['images_to_win'] or game['current_index'] >= len(game['images'])
-    win = game['score'] >= game['images_to_win'] and game['lives'] > 0
+    # La victoria se alcanza al llegar a 8 aciertos. No hay condición de derrota.
+    win = game['score'] >= game['images_to_win']
+    # El juego termina si se gana o si se acaban las imágenes (improbable)
+    game_over = win or game['current_index'] >= len(game['images'])
 
     response = {
         'correct': is_correct,
         'new_score': game['score'],
-        'new_lives': game['lives'],
         'game_over': game_over,
         'win': win
     }

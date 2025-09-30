@@ -40,18 +40,14 @@
         object-fit: contain; /* Asegura que la imagen se vea completa */
     }
 
-    /* Panel de UI con vidas y puntuación */
+    /* Panel de UI con puntuación */
     #ui-panel {
         display: flex;
-        justify-content: space-between;
+        justify-content: center; /* Centrado ya que solo hay un elemento */
         align-items: center;
         margin-bottom: 1.5rem;
         font-size: 1.2rem;
         color: #e6eef8;
-    }
-    #lives-display {
-        font-size: 2rem;
-        letter-spacing: 4px;
     }
 
     /* Botones de elección */
@@ -98,7 +94,7 @@
 
 <div class="text-center">
     <h2>Juego 1: ¿Real o IA?</h2>
-    <p class="help-text">Observa la imagen y decide si es auténtica o fue generada por una inteligencia artificial. Tienes 3 vidas.</p>
+    <p class="help-text">Consigue 8 aciertos para demostrar tu valía. No hay penalización por errores, ¡así que confía en tu instinto!</p>
 </div>
 
 <div id="game-container">
@@ -109,8 +105,7 @@
     </div>
 
     <div id="ui-panel">
-        <div id="lives-display">❤️❤️❤️</div>
-        <div id="score-display">Correctas: 0 / 10</div>
+        <div id="score-display">Correctas: 0 / 8</div>
     </div>
 
     <div id="choice-buttons">
